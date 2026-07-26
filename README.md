@@ -23,6 +23,7 @@ Semua perintah, nama branch, dan path di panduan ini diverifikasi langsung ke re
 
 ### Panduan tambahan
 
+- **[microG Bawaan (opsional)](./MICROG-BUILT-IN-Redmi5A.md)** — pasang microG langsung ke dalam ROM sebagai pengganti Google Play Services. LineageOS 18.1+ sudah punya *restricted signature spoofing* bawaan, jadi **tidak perlu patch `frameworks/base`** sama sekali.
 - **[Tuning RAM & Storage](./TUNING-RAM-Storage-Redmi5A.md)** — apakah perlu konfigurasi Android Go? (jawabannya: tidak), apa yang sudah disetel device tree, tuning selektif yang direkomendasikan, dan cara menyiasati super partition 3,75 GB.
 
 ---

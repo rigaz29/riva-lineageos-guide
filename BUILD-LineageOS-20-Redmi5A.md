@@ -544,6 +544,13 @@ source build/envsetup.sh && lunch lineage_Mi8937-userdebug && mka bacon
 
 ---
 
+## Panduan Terkait
+
+- **[microG bawaan (opsional)](./MICROG-BUILT-IN-Redmi5A.md)** — tanam microG ke dalam ROM. Tidak perlu patch: LineageOS 20 sudah punya restricted signature spoofing.
+- **[Tuning RAM & Storage](./TUNING-RAM-Storage-Redmi5A.md)** — perlukah konfigurasi Android Go, dan cara menyiasati super partition 3,75 GB.
+
+---
+
 ## Referensi
 
 - Local manifests — https://github.com/Mi-Thorium/local_manifests/blob/master/lineage-20.0.xml
