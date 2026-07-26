@@ -21,6 +21,10 @@ Semua perintah, nama branch, dan path di panduan ini diverifikasi langsung ke re
 - **Butuh `/data` terenkripsi di Android 13:** wajib [kernel 4.19](./BUILD-LineageOS-20-Redmi5A-kernel4.19.md), karena jalur 4.9 di branch `a13` tidak mengenkripsi `/data` sama sekali.
 - **Kamera prioritas utama:** tetap di kernel 4.9. Kernel 4.19 mematikan Camera HAL1.
 
+### Panduan tambahan
+
+- **[Tuning RAM & Storage](./TUNING-RAM-Storage-Redmi5A.md)** — apakah perlu konfigurasi Android Go? (jawabannya: tidak), apa yang sudah disetel device tree, tuning selektif yang direkomendasikan, dan cara menyiasati super partition 3,75 GB.
+
 ---
 
 ## Device yang dicakup
