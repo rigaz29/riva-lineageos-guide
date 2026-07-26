@@ -114,10 +114,31 @@ echo 'obj-$(CONFIG_KSU) += kernelsu/' >> $K/drivers/Makefile
 sed -i '/^endmenu/i source "drivers/kernelsu/Kconfig"' $K/drivers/Kconfig
 ```
 
-> ⚠️ **Perhatikan level symlink-nya.** Target yang benar adalah `../KernelSU/kernel`, **bukan** `../../KernelSU/kernel`. Symlink itu berada *di dalam* `drivers/`, jadi satu `..` sudah membawa ke root kernel. Salah level bikin `drivers/kernelsu/Kconfig` tidak resolve dan build gagal dengan pesan yang membingungkan. Verifikasi:
+> ⚠️ **Jangan hardcode level symlink-nya.** Target yang benar adalah `../KernelSU/kernel`, **bukan** `../../KernelSU/kernel` — symlink itu berada *di dalam* `drivers/`, jadi satu `..` sudah membawa ke root kernel. Salah level bikin `drivers/kernelsu/Kconfig` tidak resolve dan build gagal dengan pesan yang membingungkan. Lebih aman menghitungnya:
 > ```bash
+> ln -sfn "$(realpath --relative-to="$K/drivers" "$K/KernelSU/kernel")" $K/drivers/kernelsu
 > ls -l $K/drivers/kernelsu/Kconfig    # harus ada, ~4 KB
 > ```
+
+### Alternatif: pakai `setup.sh` upstream untuk langkah 2
+
+Langkah 2 di atas bisa digantikan sepenuhnya oleh skrip resmi SukiSU:
+
+```bash
+cd $K
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
+```
+
+Ini **lebih aman daripada mengetik symlink manual** — skrip itu menghitung path dengan `realpath --relative-to`, jadi kesalahan level `../../` mustahil terjadi. Ia juga menangani wiring `drivers/Makefile` dan `drivers/Kconfig` dengan logika yang sama.
+
+Yang perlu diketahui sebelum memakainya:
+
+| | |
+|---|---|
+| Cakupan | Hanya langkah 2. **Tidak** menyentuh susfs, fragment config, maupun BoardConfig |
+| Clone | Penuh (±60 MB), bukan `--depth 1`. Untuk tree 230 GB ini tidak berarti |
+| Argumen | `builtin` diteruskan ke `git checkout`, jadi branch-nya benar |
+| Risiko | `curl \| bash` menjalankan kode remote tanpa kamu baca dulu — pada skrip yang mengubah source kernel, itu keputusanmu |
 
 ### 3. Fragment config
 

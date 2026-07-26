@@ -53,9 +53,13 @@ else
 fi
 echo "    $(git -C "$KERNEL/KernelSU" log -1 --format='%h %ad' --date=short)"
 
-# PENTING: symlink relatif terhadap drivers/, jadi ../KernelSU/kernel — bukan ../../
-ln -sfn ../KernelSU/kernel "$KERNEL/drivers/kernelsu"
-[ -f "$KERNEL/drivers/kernelsu/Kconfig" ] || die "symlink drivers/kernelsu tidak resolve"
+# Hitung path relatif seperti setup.sh upstream, bukan hardcode.
+# Menulis "../../KernelSU/kernel" adalah kesalahan yang mudah terjadi:
+# symlink ini berada DI DALAM drivers/, jadi satu ".." sudah sampai root kernel.
+REL="$(realpath --relative-to="$KERNEL/drivers" "$KERNEL/KernelSU/kernel")"
+ln -sfn "$REL" "$KERNEL/drivers/kernelsu"
+[ -f "$KERNEL/drivers/kernelsu/Kconfig" ] || die "symlink drivers/kernelsu tidak resolve ($REL)"
+echo "    drivers/kernelsu -> $REL"
 
 grep -q "kernelsu" "$KERNEL/drivers/Makefile" \
     || echo 'obj-$(CONFIG_KSU) += kernelsu/' >> "$KERNEL/drivers/Makefile"
