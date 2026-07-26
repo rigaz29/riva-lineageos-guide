@@ -148,7 +148,7 @@ repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags
 
 # 2. Pindahkan ke dalam tree ROM
 mkdir -p ~/android/lineage-20.0/kernel/xiaomi
-mv ~/mithorium-4.19 ~/android/lineage-20.0/kernel/xiaomi/mithorium-4.19
+mv -T ~/mithorium-4.19 ~/android/lineage-20.0/kernel/xiaomi/mithorium-4.19
 
 cd ~/android/lineage-20.0
 ```
@@ -303,7 +303,7 @@ for v in 4.9 4.19; do
 done
 
 mkdir -p ~/android/lineage-20.0/kernel/xiaomi
-mv ~/mithorium-4.9 ~/mithorium-4.19 ~/android/lineage-20.0/kernel/xiaomi/
+for v in 4.9 4.19; do mv -T ~/mithorium-$v ~/android/lineage-20.0/kernel/xiaomi/mithorium-$v; done
 
 cd ~/android/lineage-20.0
 source build/envsetup.sh

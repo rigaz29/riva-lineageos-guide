@@ -208,10 +208,12 @@ repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags
 
 # 2. Pindahkan ke dalam tree ROM
 mkdir -p ~/android/lineage-18.1/kernel/xiaomi
-mv ~/mithorium-4.9 ~/android/lineage-18.1/kernel/xiaomi/mithorium-4.9
+mv -T ~/mithorium-4.9 ~/android/lineage-18.1/kernel/xiaomi/mithorium-4.9
 
 cd ~/android/lineage-18.1
 ```
+
+> `mv -T` penting: tanpa `-T`, kalau direktori tujuan sudah ada (misalnya sisa percobaan sebelumnya), `mv` akan memindahkan source **ke dalam** direktori itu dan menghasilkan `mithorium-<versi>/mithorium-<versi>` yang bersarang. Dengan `-T`, direktori kosong akan diganti, dan kalau ternyata berisi `mv` gagal keras alih-alih diam-diam salah tempat.
 
 Setelah dipindah, direktori kernel punya `.repo` sendiri. `repo sync` berikutnya dari dalam direktori itu aman — `repo` mencari `.repo` mulai dari direktori kerja, jadi ia menemukan milik sendiri lebih dulu dan tidak pernah menyentuh client ROM.
 
@@ -376,6 +378,7 @@ Lalu `lunch lineage_rova-userdebug`.
 | Error Python `No module named 'imp'` | Host Ubuntu 24.04+. Pindah ke 22.04 atau Docker ([1b](#1b-opsional-build-di-docker-paling-aman)). |
 | `repo sync` gagal berulang di project tertentu | `repo sync --force-sync -j1 <path/project>` |
 | `remote mi-thorium already exists with different attributes` | Kamu menjalankan `repo init` kernel di dalam tree ROM. Lihat pemulihannya di bawah. |
+| Semua `ls` di verifikasi kernel gagal padahal sync sukses | Direktori bersarang: cek `ls kernel/xiaomi/mithorium-*/`. Kalau isinya `mithorium-<versi>/` lagi, `mv` tadi masuk ke dalam direktori kosong yang sudah ada. Rapikan: `cd kernel/xiaomi && mv mithorium-X/mithorium-X mithorium-X.tmp && rmdir mithorium-X && mv mithorium-X.tmp mithorium-X` |
 
 ### Pemulihan: `repo init` kernel dijalankan di dalam tree ROM
 
