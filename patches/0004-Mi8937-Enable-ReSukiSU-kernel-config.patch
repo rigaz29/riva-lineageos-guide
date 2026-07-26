@@ -1,0 +1,28 @@
+From f67a085f488b735e542e9c7274b2ebd46753bee4 Mon Sep 17 00:00:00 2001
+From: rigaz29 <ryanbagas27@gmail.com>
+Date: Sun, 26 Jul 2026 18:29:05 +0000
+Subject: [PATCH] Mi8937: Enable ReSukiSU kernel config
+
+---
+ BoardConfig.mk | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/BoardConfig.mk b/BoardConfig.mk
+index 95e6957..18a2aae 100644
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -55,9 +55,9 @@ TARGET_KERNEL_CONFIG += \
+     vendor/xiaomi/msm8937/common.config \
+     vendor/xiaomi/msm8937/mi8937.config
+ 
+-# SukiSU-Ultra + susfs
++# ReSukiSU
+ TARGET_KERNEL_CONFIG += \
+-    vendor/feature/sukisu.config
++    vendor/feature/resukisu.config
+ 
+ ifeq ($(MI8937_CAM_USE_LATEST_CAMERA_STACK),true)
+ TARGET_KERNEL_CONFIG += vendor/xiaomi/msm8937/optional/latest-camera-stack.config
+-- 
+2.43.0
+
