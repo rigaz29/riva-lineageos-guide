@@ -194,16 +194,26 @@ git -C vendor/lineage log --oneline -1  # → "Split msm8937 from UM_3_18_FAMILY
 
 Sejak Mei 2023 Mi-Thorium **mengeluarkan kernel dari local manifest ROM**. Kernel disync sebagai repo `repo` bersarang. Kalau langkah ini dilewat, build gagal karena `TARGET_KERNEL_SOURCE` (`kernel/xiaomi/mithorium-4.9/kernel`) tidak ada.
 
+> ⚠️ **`repo` tidak mendukung nested checkout.** Kalau kamu menjalankan `repo init` di dalam direktori tree ROM, `repo` akan menelusuri direktori induk, menemukan `.repo` milik ROM, dan **menimpa manifest ROM kamu** dengan manifest kernel. Gejalanya: `repo: reusing existing repo client checkout in ...` diikuti `fatal: remote mi-thorium already exists with different attributes`.
+>
+> Solusinya: sync di luar tree ROM, lalu pindahkan. Lihat [Bagian 11](#11-troubleshooting) kalau kamu terlanjur mengalaminya.
+
 ```bash
-cd ~/android/lineage-18.1
-mkdir -p kernel/xiaomi/mithorium-4.9
-cd kernel/xiaomi/mithorium-4.9
+# 1. Sync di LUAR tree ROM
+mkdir -p ~/mithorium-4.9
+cd ~/mithorium-4.9
 
 repo init -u https://github.com/Mi-Thorium/kernel_manifest -b mithorium-4.9 --no-clone-bundle
 repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags
 
+# 2. Pindahkan ke dalam tree ROM
+mkdir -p ~/android/lineage-18.1/kernel/xiaomi
+mv ~/mithorium-4.9 ~/android/lineage-18.1/kernel/xiaomi/mithorium-4.9
+
 cd ~/android/lineage-18.1
 ```
+
+Setelah dipindah, direktori kernel punya `.repo` sendiri. `repo sync` berikutnya dari dalam direktori itu aman — `repo` mencari `.repo` mulai dari direktori kerja, jadi ia menemukan milik sendiri lebih dulu dan tidak pernah menyentuh client ROM.
 
 Manifest kernel ini otomatis menyusun:
 
@@ -365,6 +375,40 @@ Lalu `lunch lineage_rova-userdebug`.
 | OOM / `Killed` saat `metalava`/`droiddoc` | Tambah swap (`sudo fallocate -l 16G /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile`), atau turunkan `-j` ke `-j4`. |
 | Error Python `No module named 'imp'` | Host Ubuntu 24.04+. Pindah ke 22.04 atau Docker ([1b](#1b-opsional-build-di-docker-paling-aman)). |
 | `repo sync` gagal berulang di project tertentu | `repo sync --force-sync -j1 <path/project>` |
+| `remote mi-thorium already exists with different attributes` | Kamu menjalankan `repo init` kernel di dalam tree ROM. Lihat pemulihannya di bawah. |
+
+### Pemulihan: `repo init` kernel dijalankan di dalam tree ROM
+
+Gejala lengkapnya:
+
+```
+repo: reusing existing repo client checkout in /root/android/lineage-18.1
+fatal: manifest 'default.xml' not available
+fatal: remote mi-thorium already exists with different attributes
+Repo command failed: UpdateManifestError
+```
+
+Penyebabnya: `repo` mencari `.repo` mulai dari direktori kerja lalu **naik ke direktori induk** sampai ketemu. Karena tree ROM punya `.repo`, `repo init` di subdirektori mana pun akan memakai client ROM — dan kode `repo` sendiri menyatakannya eksplisit di `subcmds/init.py`: *"repo doesn't do nested checkouts."*
+
+Cek apakah manifest ROM-mu tertimpa:
+
+```bash
+cd ~/android/lineage-18.1
+git -C .repo/manifests config --get remote.origin.url
+```
+
+Kalau hasilnya `https://github.com/Mi-Thorium/kernel_manifest`, perbaiki:
+
+```bash
+cd ~/android/lineage-18.1
+repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --no-clone-bundle
+git -C .repo/manifests config --get remote.origin.url   # → LineageOS/android
+repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+```
+
+Source yang sudah ter-download tidak hilang — yang tertimpa hanya konfigurasi manifest di `.repo`. Patch di `system/core` dan `vendor/lineage` juga tetap aman; cek dengan `git -C system/core log --oneline -1`.
+
+Setelah ROM pulih, sync kernel seperti di [Bagian 6](#6-sync-kernel-repo-terpisah--wajib): init di luar tree, lalu `mv` ke dalam.
 
 ---
 

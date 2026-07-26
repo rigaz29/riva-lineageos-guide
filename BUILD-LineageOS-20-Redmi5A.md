@@ -193,16 +193,26 @@ TARGET_KERNEL_SOURCE := kernel/xiaomi/mithorium-$(TARGET_KERNEL_VERSION)/kernel
 
 Karena `lineage_Mi8937.mk` mengeset `TARGET_KERNEL_VERSION := 4.9`, direktorinya harus persis `kernel/xiaomi/mithorium-4.9`.
 
+> ⚠️ **`repo` tidak mendukung nested checkout.** Kalau kamu menjalankan `repo init` di dalam direktori tree ROM, `repo` akan menelusuri direktori induk, menemukan `.repo` milik ROM, dan **menimpa manifest ROM kamu** dengan manifest kernel. Gejalanya: `repo: reusing existing repo client checkout in ...` diikuti `fatal: remote mi-thorium already exists with different attributes`.
+>
+> Solusinya: sync di luar tree ROM, lalu pindahkan. Lihat [Bagian 11](#11-troubleshooting) kalau kamu terlanjur mengalaminya.
+
 ```bash
-cd ~/android/lineage-20.0
-mkdir -p kernel/xiaomi/mithorium-4.9
-cd kernel/xiaomi/mithorium-4.9
+# 1. Sync di LUAR tree ROM
+mkdir -p ~/mithorium-4.9
+cd ~/mithorium-4.9
 
 repo init -u https://github.com/Mi-Thorium/kernel_manifest -b mithorium-4.9 --no-clone-bundle
 repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags
 
+# 2. Pindahkan ke dalam tree ROM
+mkdir -p ~/android/lineage-20.0/kernel/xiaomi
+mv ~/mithorium-4.9 ~/android/lineage-20.0/kernel/xiaomi/mithorium-4.9
+
 cd ~/android/lineage-20.0
 ```
+
+Setelah dipindah, direktori kernel punya `.repo` sendiri. `repo sync` berikutnya dari dalam direktori itu aman — `repo` mencari `.repo` mulai dari direktori kerja, jadi ia menemukan milik sendiri lebih dulu dan tidak pernah menyentuh client ROM.
 
 Struktur yang terbentuk:
 
@@ -359,6 +369,45 @@ Jangan dirty-flash. Beda major version berarti beda vendor blobs dan VINTF level
 | Kehabisan disk di tengah build | Android 13 butuh ~300 GB. Cek `df -h`. |
 | `repo sync` gagal berulang di satu project | `repo sync --force-sync -j1 <path/project>` |
 | Kamu terlanjur mencari patch seperti di tutorial 18.1 | Memang tidak ada. `local_manifests/lineage-20.0/` tidak eksis — itu normal, bukan tanda sync gagal. |
+| `remote mi-thorium already exists with different attributes` | Kamu menjalankan `repo init` kernel di dalam tree ROM. Lihat pemulihannya di bawah. |
+
+### Pemulihan: `repo init` kernel dijalankan di dalam tree ROM
+
+Gejala lengkapnya:
+
+```
+repo: reusing existing repo client checkout in /root/android/lineage-20.0
+fatal: manifest 'default.xml' not available
+fatal: remote mi-thorium already exists with different attributes
+Repo command failed: UpdateManifestError
+```
+
+Penyebabnya: `repo` mencari `.repo` mulai dari direktori kerja lalu **naik ke direktori induk** sampai ketemu. Karena tree ROM punya `.repo`, `repo init` di subdirektori mana pun akan memakai client ROM — dan kode `repo` sendiri menyatakannya eksplisit di `subcmds/init.py`: *"repo doesn't do nested checkouts."*
+
+Akibatnya URL manifest ROM kamu tertimpa. Cek dulu:
+
+```bash
+cd ~/android/lineage-20.0
+git -C .repo/manifests config --get remote.origin.url
+```
+
+Kalau hasilnya `https://github.com/Mi-Thorium/kernel_manifest`, itu memang tertimpa. Perbaiki:
+
+```bash
+cd ~/android/lineage-20.0
+repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --no-clone-bundle
+
+# verifikasi sudah kembali
+git -C .repo/manifests config --get remote.origin.url   # → LineageOS/android
+head -3 .repo/manifest.xml
+
+# selaraskan lagi
+repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+```
+
+**Kabar baiknya:** source yang sudah ter-download tidak hilang. Yang tertimpa hanya konfigurasi manifest di `.repo`, bukan project yang sudah tersync — `.repo/local_manifests/mithorium.xml` pun tetap utuh.
+
+Setelah ROM pulih, sync kernel dengan cara yang benar seperti di [Bagian 7](#7-sync-kernel-repo-terpisah--wajib): init di luar tree, lalu `mv` ke dalam.
 
 ---
 

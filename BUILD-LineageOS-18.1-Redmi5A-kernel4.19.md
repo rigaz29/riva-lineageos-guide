@@ -119,13 +119,19 @@ Jadi **tidak perlu edit manifest sama sekali**.
 
 Ini satu-satunya perbedaan di tahap sync:
 
+> ⚠️ **`repo` tidak mendukung nested checkout.** `repo init` di dalam tree ROM akan menemukan `.repo` milik ROM dan menimpanya. Sync di luar, lalu pindahkan.
+
 ```bash
-cd ~/android/lineage-18.1
-mkdir -p kernel/xiaomi/mithorium-4.19
-cd kernel/xiaomi/mithorium-4.19
+# 1. Sync di LUAR tree ROM
+mkdir -p ~/mithorium-4.19
+cd ~/mithorium-4.19
 
 repo init -u https://github.com/Mi-Thorium/kernel_manifest -b mithorium-4.19 --no-clone-bundle
 repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags
+
+# 2. Pindahkan ke dalam tree ROM
+mkdir -p ~/android/lineage-18.1/kernel/xiaomi
+mv ~/mithorium-4.19 ~/android/lineage-18.1/kernel/xiaomi/mithorium-4.19
 
 cd ~/android/lineage-18.1
 ```
@@ -252,10 +258,17 @@ Bisa, dan tanpa konflik — direktori kernel dan direktori `out` keduanya terpis
 cd ~/android/lineage-18.1
 
 # sync kedua kernel sekali saja
-mkdir -p kernel/xiaomi/mithorium-4.9 kernel/xiaomi/mithorium-4.19
-(cd kernel/xiaomi/mithorium-4.9  && repo init -u https://github.com/Mi-Thorium/kernel_manifest -b mithorium-4.9  --no-clone-bundle && repo sync -c -j$(nproc --all) --no-tags)
-(cd kernel/xiaomi/mithorium-4.19 && repo init -u https://github.com/Mi-Thorium/kernel_manifest -b mithorium-4.19 --no-clone-bundle && repo sync -c -j$(nproc --all) --no-tags)
+# Sync kedua kernel DI LUAR tree ROM, lalu pindahkan
+for v in 4.9 4.19; do
+    mkdir -p ~/mithorium-$v && (cd ~/mithorium-$v && \
+        repo init -u https://github.com/Mi-Thorium/kernel_manifest -b mithorium-$v --no-clone-bundle && \
+        repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags)
+done
 
+mkdir -p ~/android/lineage-18.1/kernel/xiaomi
+mv ~/mithorium-4.9 ~/mithorium-4.19 ~/android/lineage-18.1/kernel/xiaomi/
+
+cd ~/android/lineage-18.1
 source build/envsetup.sh
 
 lunch lineage_Mi8937-userdebug      && mka bacon    # → out/target/product/Mi8937
