@@ -21,30 +21,18 @@ die() { printf '\033[31mGAGAL: %s\033[0m\n' "$*" >&2; exit 1; }
 grep -q "^PATCHLEVEL = 19" "$KERNEL/Makefile" || echo "PERINGATAN: kernel bukan 4.19 — cek SUSFS_BRANCH"
 
 # ---------------------------------------------------------------- susfs
-say "1/5  Mengambil susfs4ksu ($SUSFS_BRANCH)"
-git clone -q --depth 1 -b "$SUSFS_BRANCH" https://gitlab.com/simonpunk/susfs4ksu.git "$WORK/susfs"
-SUSFS_VER=$(grep -rhoE 'SUSFS_VERSION[^"]*"[^"]+"' "$WORK/susfs" 2>/dev/null | head -1 || echo "?")
-echo "    $SUSFS_VER"
-
-say "2/5  Menyalin berkas susfs ke kernel"
-cp "$WORK/susfs/kernel_patches/fs/"*.c            "$KERNEL/fs/"
-cp "$WORK/susfs/kernel_patches/include/linux/"*.h "$KERNEL/include/linux/"
-echo "    fs/susfs.c, fs/sus_su.c, include/linux/susfs*.h, sus_su.h"
-
-say "3/5  Menerapkan patch kernel susfs"
-cd "$KERNEL"
-if grep -q "CONFIG_KSU_SUSFS" fs/namei.c 2>/dev/null; then
-    echo "    sudah diterapkan — dilewati"
-else
-    # 2 hunk fs/namespace.c memang gagal di kernel msm downstream (SUS_MOUNT).
-    # Itu diharapkan; fiturnya dimatikan di config fragment.
-    patch -p1 --fuzz=5 --no-backup-if-mismatch \
-        < "$WORK/susfs/kernel_patches/50_add_susfs_in_kernel-${SUSFS_BRANCH#kernel-}.patch" || true
-    [ -f fs/namespace.c.rej ] && echo "    catatan: fs/namespace.c.rej = 2 hunk SUS_MOUNT (diharapkan)"
-fi
+# susfs SENGAJA TIDAK dipasang.
+#
+# SukiSU `builtin` (2026) memanggil API susfs v2.x — susfs_add_sus_path_loop,
+# susfs_add_sus_map, susfs_start_sdcard_monitor, SUSFS_MAGIC. Sementara
+# susfs4ksu branch kernel-4.19 berhenti di v1.5.5 (Feb 2025) dan tidak punya
+# satu pun dari itu; branch GKI sudah v2.2.0 tapi jalur non-GKI tidak lagi
+# dirawat upstream. Memasangnya membuat kernel gagal kompilasi di
+# KernelSU/kernel/supercall/dispatch.c.
+say "1/3  Melewati susfs (tidak kompatibel di kernel 4.19 — lihat komentar)"
 
 # -------------------------------------------------------------- SukiSU
-say "4/5  Memasang SukiSU-Ultra (branch $SUKISU_BRANCH)"
+say "2/3  Memasang SukiSU-Ultra (branch $SUKISU_BRANCH)"
 if [ -d "$KERNEL/KernelSU" ]; then
     echo "    KernelSU/ sudah ada — dilewati"
 else
@@ -52,6 +40,18 @@ else
         https://github.com/SukiSU-Ultra/SukiSU-Ultra.git "$KERNEL/KernelSU"
 fi
 echo "    $(git -C "$KERNEL/KernelSU" log -1 --format='%h %ad' --date=short)"
+
+# Perbaiki dua bug upstream yang membuat branch builtin gagal di kernel <5.10.
+PATCH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../patches" && pwd)"
+# Deteksi lewat subjek commit, BUKAN grep string: upstream ksud.c sudah
+# memuat "KERNEL_VERSION(5, 10, 0)" di tempat lain (false positive).
+if git -C "$KERNEL/KernelSU" log --format=%s | grep -q "^Fix build on kernels older than 5.10$"; then
+    echo "    patch <5.10 sudah diterapkan"
+else
+    git -C "$KERNEL/KernelSU" -c user.name=build -c user.email=build@local \
+        am "$PATCH_DIR/0002-sukisu-Fix-build-on-kernels-older-than-5.10.patch" \
+        && echo "    patch <5.10 diterapkan" || die "patch SukiSU gagal diterapkan"
+fi
 
 # Hitung path relatif seperti setup.sh upstream, bukan hardcode.
 # Menulis "../../KernelSU/kernel" adalah kesalahan yang mudah terjadi:
@@ -67,25 +67,22 @@ grep -q "drivers/kernelsu/Kconfig" "$KERNEL/drivers/Kconfig" \
     || sed -i '/^endmenu/i source "drivers/kernelsu/Kconfig"' "$KERNEL/drivers/Kconfig"
 
 # -------------------------------------------------------------- config
-say "5/5  Menulis fragment config"
+say "3/3  Menulis fragment config"
 cat > "$KERNEL/arch/arm64/configs/vendor/feature/sukisu.config" <<'EOF'
-# SukiSU-Ultra (branch: builtin) + susfs
+# SukiSU-Ultra (branch: builtin)
 # Hook memakai titik hook statis bawaan Mi-Thorium — simbolnya cocok.
 CONFIG_KSU=y
 CONFIG_KSU_STATIC_HOOKS=y
 
-CONFIG_KSU_SUSFS=y
-CONFIG_KSU_SUSFS_SUS_PATH=y
-CONFIG_KSU_SUSFS_SUS_KSTAT=y
-CONFIG_KSU_SUSFS_SUS_MAP=y
-CONFIG_KSU_SUSFS_SPOOF_UNAME=y
-CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y
-CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
-CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y
-CONFIG_KSU_SUSFS_ENABLE_LOG=y
+# susfs DIMATIKAN — tidak bisa dipakai di kernel 4.19.
+# SukiSU `builtin` (2026) menargetkan API susfs v2.x
+# (susfs_add_sus_path_loop, susfs_add_sus_map, susfs_start_sdcard_monitor,
+# SUSFS_MAGIC), sementara susfs4ksu branch kernel-4.19 berhenti di v1.5.5
+# (Feb 2025). Mengaktifkannya membuat kernel gagal kompilasi di
+# KernelSU/kernel/supercall/dispatch.c. Branch GKI sudah v2.2.0, tapi
+# non-GKI tidak lagi dirawat upstream.
+# CONFIG_KSU_SUSFS is not set
 
-# Dimatikan: 2 hunk fs/namespace.c tidak apply ke kernel msm downstream.
-# CONFIG_KSU_SUSFS_SUS_MOUNT is not set
 # CONFIG_KPM is not set
 EOF
 echo "    arch/arm64/configs/vendor/feature/sukisu.config"
