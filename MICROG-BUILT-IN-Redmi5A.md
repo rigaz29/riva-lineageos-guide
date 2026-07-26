@@ -69,6 +69,14 @@ Isinya cuma satu baris project:
 repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags
 ```
 
+> ⚠️ **Sync ini akan menghapus patch HAL audio kamu.** Checkout `repo` berada di detached HEAD, jadi commit lokal menjadi yatim dan project dikembalikan ke revisi manifest — termasuk `hardware/mithorium/audio/...`. Kalau tidak diterapkan ulang, build gagal di `libcirrusspkrprot` dengan error C23 yang sama seperti sebelumnya.
+>
+> ```bash
+> cd ~/android/lineage-20.0/hardware/mithorium/audio/LA.UM.9.6.4.r2-04300-89xx.QSSI13r2.0/hal
+> git am /path/ke/riva-lineageos-guide/patches/0001-audio-extn-Name-the-unused-pthread-parameters.patch
+> cd ~/android/lineage-20.0
+> ```
+
 ### 3c. Build dengan `WITH_GMS=true`
 
 ```bash

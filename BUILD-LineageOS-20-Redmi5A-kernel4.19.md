@@ -343,6 +343,10 @@ curl -s -o .repo/local_manifests/mithorium.xml \
 repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 (cd kernel/xiaomi/mithorium-4.19 && repo sync -c -j$(nproc --all) --no-tags)
 
+# WAJIB: patch HAL audio terhapus oleh repo sync, terapkan ulang
+(cd hardware/mithorium/audio/LA.UM.9.6.4.r2-04300-89xx.QSSI13r2.0/hal && \
+    git am /path/ke/riva-lineageos-guide/patches/0001-audio-extn-Name-the-unused-pthread-parameters.patch)
+
 source build/envsetup.sh && lunch lineage_Mi8937_4_19-userdebug && mka bacon
 ```
 

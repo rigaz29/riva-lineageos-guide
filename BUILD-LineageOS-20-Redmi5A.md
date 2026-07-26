@@ -518,7 +518,19 @@ curl -s -o .repo/local_manifests/mithorium.xml \
 repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 (cd kernel/xiaomi/mithorium-4.9 && repo sync -c -j$(nproc --all) --no-tags)
 
+# WAJIB: terapkan ulang patch HAL audio yang baru saja terhapus repo sync
+(cd hardware/mithorium/audio/LA.UM.9.6.4.r2-04300-89xx.QSSI13r2.0/hal && \
+    git am /path/ke/riva-lineageos-guide/patches/0001-audio-extn-Name-the-unused-pthread-parameters.patch)
+
 source build/envsetup.sh && lunch lineage_Mi8937-userdebug && mka bacon
+```
+
+> ⚠️ **`repo sync` menghapus patch lokal.** Checkout `repo` berada di detached HEAD, jadi commit lokalmu akan menjadi yatim dan project dikembalikan ke revisi manifest. Patch HAL audio **wajib** diterapkan ulang setiap kali sync — kalau tidak, build gagal lagi di `libcirrusspkrprot`.
+
+```bash
+cd ~/android/lineage-20.0/hardware/mithorium/audio/LA.UM.9.6.4.r2-04300-89xx.QSSI13r2.0/hal
+git am /path/ke/riva-lineageos-guide/patches/0001-audio-extn-Name-the-unused-pthread-parameters.patch
+cd ~/android/lineage-20.0
 ```
 
 ---
