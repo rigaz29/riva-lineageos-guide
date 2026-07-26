@@ -1,1 +1,6 @@
 .claude/
+
+# Artefak ROM (hardlink ke out/, ~1 GB each) — jangan pernah masuk git
+rom/*.zip
+rom/*.img
+rom/*.sha256
