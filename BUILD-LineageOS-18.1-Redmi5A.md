@@ -106,8 +106,10 @@ ccache -o compression=true
 mkdir -p ~/android/lineage-18.1
 cd ~/android/lineage-18.1
 
-repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --no-clone-bundle
+repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --git-lfs --no-clone-bundle
 ```
+
+> ⚠️ **`--git-lfs` wajib, bukan opsional.** Prebuilt WebView LineageOS disimpan lewat Git LFS. Tanpa flag ini, `external/chromium-webview/prebuilt/*/webview.apk` hanya berisi pointer teks 134 byte, dan build gagal jauh di belakang dengan `zip: not a valid zip file`. Repo prebuilt itu hanya punya branch `main` yang dipakai semua versi LineageOS, jadi ini berlaku untuk 18.1 maupun 20.
 
 > Branch `lineage-18.1` masih ada di GitHub LineageOS (sudah EOL, tapi tetap bisa di-clone).
 
@@ -404,7 +406,7 @@ Kalau hasilnya `https://github.com/Mi-Thorium/kernel_manifest`, perbaiki:
 
 ```bash
 cd ~/android/lineage-18.1
-repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --no-clone-bundle
+repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --git-lfs --no-clone-bundle
 git -C .repo/manifests config --get remote.origin.url   # → LineageOS/android
 repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 ```

@@ -60,7 +60,7 @@ Setiap panduan mencakup satu alur penuh dari nol sampai ZIP siap flash:
 
 ---
 
-## Empat jebakan utama
+## Lima jebakan utama
 
 Ringkasan hal yang paling sering menggagalkan build, dijelaskan detail di masing-masing panduan:
 
@@ -70,7 +70,9 @@ Ringkasan hal yang paling sering menggagalkan build, dijelaskan detail di masing
 
 3. **Dua patch wajib di LineageOS 18.1.** Tersimpan di `local_manifests/lineage-18.1/` dan harus di-`git am` manual. Di LineageOS 20 keduanya sudah masuk upstream.
 
-4. **HAL audio Mi-Thorium tidak kompilasi apa adanya.** Commit tip `a3ff9d54` (Agu 2025) memakai parameter `void*` tanpa nama — ekstensi C23 yang ditolak clang di bawah `-Werror`. Build gagal ~1 jam setelah dimulai. Patch-nya ada di [`patches/`](./patches).
+4. **`repo init` wajib pakai `--git-lfs`.** Prebuilt WebView LineageOS disimpan lewat Git LFS. Tanpa flag ini `webview.apk` hanya berisi pointer 134 byte dan build gagal jauh di belakang dengan `zip: not a valid zip file`.
+
+5. **HAL audio Mi-Thorium tidak kompilasi apa adanya.** Commit tip `a3ff9d54` (Agu 2025) memakai parameter `void*` tanpa nama — ekstensi C23 yang ditolak clang di bawah `-Werror`. Build gagal ~1 jam setelah dimulai. Patch-nya ada di [`patches/`](./patches).
 
 ---
 

@@ -154,10 +154,10 @@ ccache -o compression=true
 mkdir -p ~/android/lineage-20.0
 cd ~/android/lineage-20.0
 
-repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --no-clone-bundle
+repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs --no-clone-bundle
 ```
 
-> Kalau saat sync ada project yang minta Git LFS, ulangi `repo init` dengan tambahan `--git-lfs` (paket `git-lfs` sudah terpasang dari langkah 3a).
+> ⚠️ **`--git-lfs` wajib, bukan opsional.** Prebuilt WebView LineageOS disimpan lewat Git LFS. Tanpa flag ini, `external/chromium-webview/prebuilt/*/webview.apk` hanya berisi pointer teks 134 byte, dan build gagal jauh di belakang dengan `zip: not a valid zip file`. Repo prebuilt itu hanya punya branch `main` yang dipakai semua versi LineageOS, jadi ini berlaku untuk 18.1 maupun 20.
 
 ---
 
@@ -423,6 +423,7 @@ Jangan dirty-flash. Beda major version berarti beda vendor blobs dan VINTF level
 | Local manifest hilang setelah build | Kamu pakai `breakfast`/`brunch`. Pakai `lunch`, lalu restore manifest. |
 | `Killed` saat Soong / `metalava` | RAM kurang. Tambah swap: `sudo fallocate -l 24G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile`, atau turunkan ke `-j4`. |
 | Error Python `No module named 'imp'` | Host Ubuntu 24.04+. Pindah ke 22.04 atau Docker. |
+| `zip: not a valid zip file` saat `target Prebuilt: webview` | `repo init` dijalankan tanpa `--git-lfs`, jadi `webview.apk` masih berupa pointer LFS. Lihat pemulihannya di bawah. |
 | `no space left on device` di `out/soong.log` | Disk penuh. Lihat rincian kebutuhan nyata di [Bagian 3](#3-persyaratan-host). Cek `df -h /` dan `du -sh out .repo`. Build bisa dilanjutkan setelah ruang dibebaskan — `mka bacon` melanjutkan, tidak mengulang dari nol. |
 | `repo sync` gagal berulang di satu project | `repo sync --force-sync -j1 <path/project>` |
 | Kamu terlanjur mencari patch seperti di tutorial 18.1 | Memang tidak ada. `local_manifests/lineage-20.0/` tidak eksis — itu normal, bukan tanda sync gagal. |
@@ -453,7 +454,7 @@ Kalau hasilnya `https://github.com/Mi-Thorium/kernel_manifest`, itu memang terti
 
 ```bash
 cd ~/android/lineage-20.0
-repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --no-clone-bundle
+repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs --no-clone-bundle
 
 # verifikasi sudah kembali
 git -C .repo/manifests config --get remote.origin.url   # → LineageOS/android
@@ -466,6 +467,31 @@ repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 **Kabar baiknya:** source yang sudah ter-download tidak hilang. Yang tertimpa hanya konfigurasi manifest di `.repo`, bukan project yang sudah tersync — `.repo/local_manifests/mithorium.xml` pun tetap utuh.
 
 Setelah ROM pulih, sync kernel dengan cara yang benar seperti di [Bagian 7](#7-sync-kernel-repo-terpisah--wajib): init di luar tree, lalu `mv` ke dalam.
+
+---
+
+### Pemulihan: `webview.apk` masih pointer LFS
+
+Tidak perlu sync ulang seluruh tree. `external/chromium-webview` bukan satu project melainkan container berisi sub-project per arsitektur, jadi `git lfs pull` harus dijalankan di sub-direktorinya:
+
+```bash
+cd ~/android/lineage-20.0/external/chromium-webview
+for a in arm64 arm; do (cd prebuilt/$a && git lfs pull); done
+```
+
+Verifikasi — ukurannya harus ratusan MB, bukan 134 byte:
+
+```bash
+cd ~/android/lineage-20.0
+for a in arm64 arm; do
+    stat -c "%n %s byte" external/chromium-webview/prebuilt/$a/webview.apk
+    zipinfo external/chromium-webview/prebuilt/$a/webview.apk 'lib/*.so' >/dev/null && echo "  → ZIP valid"
+done
+```
+
+Patokan: arm64 ≈ 262 MB, arm ≈ 95 MB. `x86`/`x86_64` tidak perlu untuk Redmi 5A.
+
+Setelah itu `mka bacon` bisa dilanjutkan — tidak mengulang dari nol.
 
 ---
 

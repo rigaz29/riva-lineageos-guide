@@ -121,7 +121,7 @@ Referensi baris: `mithorium.mk:16-18` (debugfs), `:205` (configstore), `:491` (d
 Ikuti tanpa perubahan apa pun:
 
 1. Persyaratan & dependency host
-2. `repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --no-clone-bundle`
+2. `repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs --no-clone-bundle`
 3. Local manifest Mi-Thorium (`lineage-20.0.xml`)
 4. `repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags`
 
