@@ -2,7 +2,7 @@
 
 > **Opsional.** Root berbasis kernel, ditanam saat build. Untuk target **kernel 4.19** (`lineage_Mi8937_4_19`).
 >
-> Status: **kernel terbukti build sukses** — `Image.gz-dtb` 19,8 MB, 225 simbol `ksu_*` di `System.map`, ReSukiSU version code 30701. Belum diuji boot di perangkat.
+> Status: **terbukti boot di perangkat** (26 Juli 2026). Kernel: `Image.gz-dtb` 19,8 MB, 225 simbol `ksu_*` di `System.map`, ReSukiSU version code 30701. Fungsi root itu sendiri belum diverifikasi lewat manager.
 
 ---
 
@@ -175,7 +175,7 @@ Jangan lupa patch HAL audio juga — lihat [panduan LineageOS 20](./BUILD-Lineag
 
 Pasang **manager**-nya. ReSukiSU mendukung multi-manager (`CONFIG_KSU_MULTI_MANAGER_SUPPORT=y`), jadi manager KernelSU resmi, RKSU, MKSU, maupun SukiSU bisa dipakai — atau [manager ReSukiSU sendiri](https://github.com/ReSukiSU/ReSukiSU/releases).
 
-⚠️ Backup ZIP lama sebelum flashing. Build ini kompilasi bersih dan terverifikasi tertanam, tapi **belum diuji boot**.
+✅ ROM hasil konfigurasi ini **sudah terbukti boot** di Redmi 5A. Tetap backup ZIP lama sebelum flashing.
 
 ---
 

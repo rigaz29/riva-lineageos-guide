@@ -1,6 +1,8 @@
 # ROM Siap Flash — Redmi 5A (`riva`)
 
-> **Belum satupun pernah di-boot di perangkat.** Keduanya kompilasi bersih dan isinya sudah diverifikasi, tapi "build sukses" bukan bukti perangkat menyala. Flash dengan asumsi bisa bootloop.
+> **ROM-A sudah terbukti boot di perangkat** (26 Juli 2026). ROM-B belum diuji.
+>
+> Yang terbukti barulah sistem menyala. Fungsi root, microG, kamera, dan radio belum diverifikasi satu per satu.
 
 Tanggal build: **26 Juli 2026** · Target: `lineage_Mi8937_4_19-userdebug` · Kernel **4.19.325**
 
@@ -26,11 +28,11 @@ sha256sum -c ROM-A_resukisu-root_microg.zip.sha256
 
 ## Mana yang harus dicoba dulu
 
-**Mulai dari `ROM-B` (tanpa root).**
+**`ROM-A` — sudah terbukti boot.**
 
-Alasannya: ROM-B lebih sedikit variabelnya. Kalau ROM-B boot, kamu tahu dasarnya — device tree, kernel 4.19, vendor blob, microG — semuanya sehat. Kalau ROM-B saja bootloop, mencoba ROM-A tidak ada gunanya karena masalahnya bukan di root.
+Saran awal di dokumen ini adalah mencoba ROM-B dulu karena variabelnya lebih sedikit. Ternyata ROM-A langsung berhasil, jadi urutan itu tidak lagi relevan: ROM-A sekaligus membuktikan seluruh dasarnya sehat — device tree `Mi8937` branch `a13`, kernel 4.19.325, vendor blob, skema *retrofit dynamic partition*, enkripsi FBE v2, patch HAL audio, dan integrasi ReSukiSU.
 
-Baru setelah ROM-B terbukti menyala, coba `ROM-A` untuk menambahkan root.
+`ROM-B` tetap berguna sebagai jalan mundur kalau ada masalah yang dicurigai berasal dari root.
 
 ---
 
