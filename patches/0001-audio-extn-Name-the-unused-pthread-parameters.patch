@@ -1,0 +1,72 @@
+From d32b7d0e6fb16fd31dffcd81c3b18d032b54f179 Mon Sep 17 00:00:00 2001
+From: rigaz29 <ryanbagas27@gmail.com>
+Date: Sun, 26 Jul 2026 11:14:26 +0000
+Subject: [PATCH] audio-extn: Name the unused pthread parameters
+
+Commit a3ff9d54 mengubah definisi fungsi thread menjadi void* tanpa nama
+parameter. Itu ekstensi C23; clang r450784d (Android 13) menolaknya di
+bawah -Werror,-Wc2x-extensions saat dikompilasi dengan -std=gnu99.
+
+Beri nama parameternya dan tandai __unused (konvensi yang sudah dipakai
+di HAL ini) sehingga tidak memicu -Wunused-parameter.
+---
+ hal/audio_extn/cirrus_playback.c | 6 +++---
+ hal/audio_extn/spkr_protection.c | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/hal/audio_extn/cirrus_playback.c b/hal/audio_extn/cirrus_playback.c
+index b492feac..6b36d49b 100644
+--- a/hal/audio_extn/cirrus_playback.c
++++ b/hal/audio_extn/cirrus_playback.c
+@@ -476,7 +476,7 @@ exit:
+     return ret;
+ }
+ 
+-static void *audio_extn_cirrus_calibration_thread(void*) {
++static void *audio_extn_cirrus_calibration_thread(void *arg __unused) {
+     struct audio_device *adev = handle.adev_handle;
+     struct audio_usecase *uc_info_rx = NULL;
+     int ret = 0;
+@@ -576,7 +576,7 @@ exit:
+ }
+ 
+ #else
+-static void *audio_extn_cirrus_config_thread(void*) {
++static void *audio_extn_cirrus_config_thread(void *arg __unused) {
+     struct audio_device *adev = handle.adev_handle;
+     struct crus_sp_ioctl_header header;
+     struct cirrus_cal_result_t result;
+@@ -659,7 +659,7 @@ exit:
+ #endif
+ 
+ #ifdef ENABLE_CIRRUS_DETECTION
+-void *audio_extn_cirrus_failure_detect_thread(void*) {
++void *audio_extn_cirrus_failure_detect_thread(void *arg __unused) {
+     struct audio_device *adev = handle.adev_handle;
+     struct crus_sp_ioctl_header header;
+     struct mixer_ctl *ctl = NULL;
+diff --git a/hal/audio_extn/spkr_protection.c b/hal/audio_extn/spkr_protection.c
+index cc3e7918..436edc8b 100644
+--- a/hal/audio_extn/spkr_protection.c
++++ b/hal/audio_extn/spkr_protection.c
+@@ -1170,7 +1170,7 @@ static void spkr_calibrate_wait()
+     pthread_mutex_unlock(&handle.cal_wait_cond_mutex);
+ }
+ 
+-static void* spkr_calibration_thread(void*)
++static void* spkr_calibration_thread(void *arg __unused)
+ {
+     unsigned long sec = 0;
+     int t0;
+@@ -1953,7 +1953,7 @@ static int get_spkr_prot_v_vali_param(int cal_fd __unused, int *status __unused,
+ }
+ #endif
+ 
+-static void* spkr_v_vali_thread(void*)
++static void* spkr_v_vali_thread(void *arg __unused)
+ {
+     int ret = 0;
+     struct audio_device *adev = handle.adev_handle;
+-- 
+2.43.0
+

@@ -2,7 +2,7 @@
 
 > Berdasarkan source **Mi-Thorium** (device tree unified `Mi8937`) — hasil verifikasi repo per Juli 2026.
 >
-> Mau Android 13? Lihat [`BUILD-LineageOS-20-Redmi5A.md`](./BUILD-LineageOS-20-Redmi5A.md) — lebih baru dan **tanpa patch manual**.
+> Mau Android 13? Lihat [`BUILD-LineageOS-20-Redmi5A.md`](./BUILD-LineageOS-20-Redmi5A.md) — lebih baru dan tidak butuh dua patch wajib di halaman ini.
 
 ---
 

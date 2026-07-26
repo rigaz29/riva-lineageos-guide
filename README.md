@@ -10,14 +10,14 @@ Semua perintah, nama branch, dan path di panduan ini diverifikasi langsung ke re
 
 | Panduan | Android | Kernel | Patch manual | Enkripsi `/data` | Camera HAL1 |
 |---|---|---|---|---|---|
-| [LineageOS 20](./BUILD-LineageOS-20-Redmi5A.md) | 13 | 4.9 | tidak ada | ❌ tidak ada | ✅ |
-| [LineageOS 20 + kernel 4.19](./BUILD-LineageOS-20-Redmi5A-kernel4.19.md) | 13 | 4.19 | tidak ada | ✅ FBE v2 + metadata | ❌ |
-| [LineageOS 18.1](./BUILD-LineageOS-18.1-Redmi5A.md) | 11 | 4.9 | 2 patch wajib | ✅ FDE | ✅ |
-| [LineageOS 18.1 + kernel 4.19](./BUILD-LineageOS-18.1-Redmi5A-kernel4.19.md) | 11 | 4.19 | 2 patch wajib | ✅ FBE v2 | ❌ |
+| [LineageOS 20](./BUILD-LineageOS-20-Redmi5A.md) | 13 | 4.9 | 1 (HAL audio) | ❌ tidak ada | ✅ |
+| [LineageOS 20 + kernel 4.19](./BUILD-LineageOS-20-Redmi5A-kernel4.19.md) | 13 | 4.19 | 1 (HAL audio) | ✅ FBE v2 + metadata | ❌ |
+| [LineageOS 18.1](./BUILD-LineageOS-18.1-Redmi5A.md) | 11 | 4.9 | 2 wajib | ✅ FDE | ✅ |
+| [LineageOS 18.1 + kernel 4.19](./BUILD-LineageOS-18.1-Redmi5A-kernel4.19.md) | 11 | 4.19 | 2 wajib | ✅ FBE v2 | ❌ |
 
 ### Rekomendasi singkat
 
-- **Mulai dari sini:** [LineageOS 20](./BUILD-LineageOS-20-Redmi5A.md) — paling baru, dan tidak butuh patch manual sama sekali.
+- **Mulai dari sini:** [LineageOS 20](./BUILD-LineageOS-20-Redmi5A.md) — paling baru, dan tidak butuh dua patch Mi-Thorium yang wajib di 18.1.
 - **Butuh `/data` terenkripsi di Android 13:** wajib [kernel 4.19](./BUILD-LineageOS-20-Redmi5A-kernel4.19.md), karena jalur 4.9 di branch `a13` tidak mengenkripsi `/data` sama sekali.
 - **Kamera prioritas utama:** tetap di kernel 4.9. Kernel 4.19 mematikan Camera HAL1.
 
@@ -60,15 +60,17 @@ Setiap panduan mencakup satu alur penuh dari nol sampai ZIP siap flash:
 
 ---
 
-## Tiga jebakan utama
+## Empat jebakan utama
 
 Ringkasan hal yang paling sering menggagalkan build, dijelaskan detail di masing-masing panduan:
 
-1. **Kernel disync terpisah.** Local manifest Mi-Thorium tidak memuat project kernel sama sekali. Kernel ditarik lewat `repo init` bersarang dari [`Mi-Thorium/kernel_manifest`](https://github.com/Mi-Thorium/kernel_manifest) ke `kernel/xiaomi/mithorium-<versi>/`. Tanpa ini, build gagal karena `TARGET_KERNEL_SOURCE` tidak ditemukan.
+1. **Kernel disync terpisah — dan TIDAK boleh bersarang.** Local manifest Mi-Thorium tidak memuat project kernel sama sekali; kernel ditarik dari [`Mi-Thorium/kernel_manifest`](https://github.com/Mi-Thorium/kernel_manifest). Tapi `repo` tidak mendukung nested checkout — `repo init` di dalam tree ROM akan menimpa manifest ROM kamu. Init di luar, lalu `mv -T` ke `kernel/xiaomi/mithorium-<versi>/`.
 
 2. **Pakai `lunch`, bukan `breakfast`/`brunch`.** Keduanya memanggil roomservice yang akan mencari `Mi8937` di GitHub LineageOS, gagal, lalu menimpa local manifest kamu.
 
-3. **Dua patch wajib di LineageOS 18.1.** Tersimpan di `local_manifests/lineage-18.1/` dan harus di-`git am` manual. Di LineageOS 20 keduanya sudah masuk upstream, jadi tidak diperlukan lagi.
+3. **Dua patch wajib di LineageOS 18.1.** Tersimpan di `local_manifests/lineage-18.1/` dan harus di-`git am` manual. Di LineageOS 20 keduanya sudah masuk upstream.
+
+4. **HAL audio Mi-Thorium tidak kompilasi apa adanya.** Commit tip `a3ff9d54` (Agu 2025) memakai parameter `void*` tanpa nama — ekstensi C23 yang ditolak clang di bawah `-Werror`. Build gagal ~1 jam setelah dimulai. Patch-nya ada di [`patches/`](./patches).
 
 ---
 

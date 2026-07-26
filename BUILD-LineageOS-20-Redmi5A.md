@@ -10,7 +10,7 @@
 
 Kalau kamu sudah baca tutorial 18.1, ada dua langkah menyebalkan di sana yang **hilang total** di LineageOS 20.
 
-### Tidak ada patch manual sama sekali
+### Tidak ada patch dari Mi-Thorium yang perlu diterapkan
 
 Repo `Mi-Thorium/local_manifests` menyimpan patch per versi Android. Isinya:
 
@@ -180,6 +180,38 @@ repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 1–5 jam tergantung koneksi. Kalau putus, ulangi perintah yang sama.
 
 **Tidak ada langkah patch setelah ini.** Langsung ke sync kernel.
+
+---
+
+### 6b. Patch HAL audio — parameter pthread tanpa nama
+
+Commit teratas HAL audio Mi-Thorium (`a3ff9d54`, Agustus 2025) mengubah definisi fungsi thread menjadi `void*` **tanpa nama parameter**. Itu ekstensi C23, dan clang `r450784d` yang dipakai LineageOS 20 menolaknya di bawah `-Werror`:
+
+```
+hardware/mithorium/audio/.../hal/hal/audio_extn/cirrus_playback.c:479:56: error:
+  omitting the parameter name in a function definition is a C2x extension
+  [-Werror,-Wc2x-extensions]
+static void *audio_extn_cirrus_calibration_thread(void*) {
+```
+
+Build gagal sekitar 1 jam setelah dimulai, tepat setelah kernel selesai. Tidak ada perbaikan upstream — commit itu adalah tip branch `mithorium/LA.UM.9.6.4.r2-04300-89xx.QSSI13r2.0`.
+
+Terapkan patch dari repo ini:
+
+```bash
+cd ~/android/lineage-20.0/hardware/mithorium/audio/LA.UM.9.6.4.r2-04300-89xx.QSSI13r2.0/hal
+git am /path/ke/riva-lineageos-guide/patches/0001-audio-extn-Name-the-unused-pthread-parameters.patch
+```
+
+Patch memberi nama parameter dan menandainya `__unused` — konvensi yang memang sudah dipakai 26 file lain di HAL ini. Menamai saja tanpa `__unused` tidak cukup: `-Wno-unused` di clang **tidak** mencakup `-Wunused-parameter`, jadi akan gagal dengan error berbeda.
+
+Mempengaruhi 5 definisi di 2 file:
+```
+hal/audio_extn/cirrus_playback.c   : 479, 579, 662
+hal/audio_extn/spkr_protection.c   : 1173, 1956
+```
+
+> Branch HAL yang sama juga dipin oleh manifest 18.1, 21, 22, dan 23, jadi versi lain kemungkinan besar terdampak sama. Saya memverifikasinya di LineageOS 20.
 
 ---
 
@@ -426,7 +458,7 @@ Tutorial lengkapnya — termasuk konsekuensi enkripsi saat flashing dan tabel pe
 
 ## 13. Update Berkala
 
-Lebih sederhana dari 18.1 karena tidak ada patch yang perlu diselamatkan:
+Lebih sederhana dari 18.1 — hanya satu patch yang perlu diselamatkan (18.1 punya dua, plus patch HAL audio ini):
 
 ```bash
 cd ~/android/lineage-20.0

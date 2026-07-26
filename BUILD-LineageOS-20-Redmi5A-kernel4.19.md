@@ -125,7 +125,7 @@ Ikuti tanpa perubahan apa pun:
 3. Local manifest Mi-Thorium (`lineage-20.0.xml`)
 4. `repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags`
 
-**Tetap tanpa patch manual** — sama seperti jalur 4.9.
+**Patch HAL audio tetap wajib** (Bagian 6b tutorial utama) — sama seperti jalur 4.9. Dua patch Mi-Thorium yang wajib di 18.1 tetap tidak diperlukan.
 
 Manifest `lineage-20.0.xml` yang sama sudah menarik semua kebutuhan 4.19:
 ```
@@ -346,7 +346,7 @@ repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 source build/envsetup.sh && lunch lineage_Mi8937_4_19-userdebug && mka bacon
 ```
 
-Tidak ada patch yang perlu diselamatkan — sama seperti jalur 4.9 di LineageOS 20.
+Jangan lupa terapkan ulang patch HAL audio kalau `repo sync` mengembalikannya — sama seperti jalur 4.9.
 
 ---
 
