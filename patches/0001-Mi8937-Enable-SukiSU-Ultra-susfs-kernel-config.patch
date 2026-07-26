@@ -1,0 +1,27 @@
+From 06dfb45013ea5fdeba7112e3d45bee0c399447ed Mon Sep 17 00:00:00 2001
+From: rigaz29 <ryanbagas27@gmail.com>
+Date: Sun, 26 Jul 2026 16:06:11 +0000
+Subject: [PATCH] Mi8937: Enable SukiSU-Ultra + susfs kernel config
+
+---
+ BoardConfig.mk | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/BoardConfig.mk b/BoardConfig.mk
+index 237b21b..95e6957 100644
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -55,6 +55,10 @@ TARGET_KERNEL_CONFIG += \
+     vendor/xiaomi/msm8937/common.config \
+     vendor/xiaomi/msm8937/mi8937.config
+ 
++# SukiSU-Ultra + susfs
++TARGET_KERNEL_CONFIG += \
++    vendor/feature/sukisu.config
++
+ ifeq ($(MI8937_CAM_USE_LATEST_CAMERA_STACK),true)
+ TARGET_KERNEL_CONFIG += vendor/xiaomi/msm8937/optional/latest-camera-stack.config
+ endif
+-- 
+2.43.0
+
