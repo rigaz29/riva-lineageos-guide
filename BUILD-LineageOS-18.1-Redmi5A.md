@@ -94,7 +94,7 @@ export CCACHE_EXEC=$(which ccache)
 export CCACHE_DIR=~/.ccache
 EOF
 source ~/.bashrc
-ccache -M 50G
+ccache -M 30G
 ccache -o compression=true
 ```
 

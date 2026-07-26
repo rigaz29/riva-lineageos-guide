@@ -49,7 +49,7 @@ Panduan ini ditulis dari sudut pandang `riva`, tapi seluruh langkah build berlak
 
 Setiap panduan mencakup satu alur penuh dari nol sampai ZIP siap flash:
 
-- Persyaratan host, dependency, `repo`, dan ccache
+- Persyaratan host, dependency, `repo`, dan ccache — termasuk **rincian disk hasil pengukuran nyata**
 - `repo init` + local manifest Mi-Thorium
 - Patch wajib (khusus 18.1) — lengkap dengan penjelasan kenapa dibutuhkan
 - **Sync kernel sebagai repo terpisah** — langkah tak terdokumentasi yang paling sering bikin build gagal

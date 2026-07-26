@@ -72,11 +72,34 @@ TARGET_OTA_ASSERT_DEVICE := mi8937,land,santoni,prada,ulysse,ugglite,ugg,rolex,r
 |---|---|---|
 | OS | Ubuntu 20.04 / 22.04 LTS 64-bit | **Ubuntu 22.04 LTS** |
 | RAM | 12 GB + swap 16 GB | 16–32 GB |
-| Disk | ~300 GB kosong (SSD) | 350 GB |
+| Disk | **250 GB kosong** (SSD) | 300 GB+ |
 | CPU | 4 core | 8 core+ |
 | Internet | sync awal ~120–150 GB | — |
 
 LineageOS 20 lebih berat dari 18.1 — source lebih besar dan Soong lebih rakus RAM. Kalau RAM pas-pasan, siapkan swap dan turunkan `-j`.
+
+### Rincian disk (hasil pengukuran nyata, bukan perkiraan)
+
+Angka di bawah diukur dari satu build `lineage_Mi8937_4_19` yang berjalan sampai tahap akhir:
+
+| Komponen | Ukuran |
+|---|---|
+| Source tree (tanpa `out` & `.repo`) | 80 GB |
+| `.repo` (objek git) | 62 GB |
+| `out/` saat build hampir selesai | 84 GB |
+| **Subtotal satu tree** | **~230 GB** |
+| ccache setelah 1 build penuh | 5,5 GB |
+
+`out/` masih tumbuh sampai sekitar 100–110 GB untuk `bacon` yang benar-benar selesai, jadi siapkan **250 GB** dan jangan pas-pasan.
+
+⚠️ Kalau di disk yang sama ada tree build lain (TWRP, device lain), hitung juga. Kehabisan disk di menit ke-70 adalah kegagalan yang paling menjengkelkan karena tidak muncul di `out/error.log` — pesannya hanya ada di `out/soong.log`:
+
+```
+build/soong/ui/status/log.go:184: Failed to write file .../out/build_error:
+  write .../out/build_error.tmp: no space left on device
+```
+
+Kalau ini terjadi, `out/error.log` justru **kosong 0 byte** dan tidak ada `FAILED:` sama sekali — jangan tertipu mencarinya di sana.
 
 ⚠️ Hindari Ubuntu 24.04+ (Python 3.12 menghapus `imp`/`distutils`, beberapa paket 32-bit di-rename). Pakai Docker `ubuntu:22.04` kalau host kamu sudah 24.04.
 
@@ -117,11 +140,11 @@ export CCACHE_EXEC=$(which ccache)
 export CCACHE_DIR=~/.ccache
 EOF
 source ~/.bashrc
-ccache -M 75G
+ccache -M 30G
 ccache -o compression=true
 ```
 
-75 GB, bukan 50 — tree Android 13 lebih besar.
+30 GB sudah cukup: setelah satu build penuh LineageOS 20, ccache hanya terisi 5,5 GB. Angka ini batas atas, bukan alokasi di muka — tapi jangan diset terlalu besar di disk yang sudah sesak.
 
 ---
 
@@ -400,7 +423,7 @@ Jangan dirty-flash. Beda major version berarti beda vendor blobs dan VINTF level
 | Local manifest hilang setelah build | Kamu pakai `breakfast`/`brunch`. Pakai `lunch`, lalu restore manifest. |
 | `Killed` saat Soong / `metalava` | RAM kurang. Tambah swap: `sudo fallocate -l 24G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile`, atau turunkan ke `-j4`. |
 | Error Python `No module named 'imp'` | Host Ubuntu 24.04+. Pindah ke 22.04 atau Docker. |
-| Kehabisan disk di tengah build | Android 13 butuh ~300 GB. Cek `df -h`. |
+| `no space left on device` di `out/soong.log` | Disk penuh. Lihat rincian kebutuhan nyata di [Bagian 3](#3-persyaratan-host). Cek `df -h /` dan `du -sh out .repo`. Build bisa dilanjutkan setelah ruang dibebaskan — `mka bacon` melanjutkan, tidak mengulang dari nol. |
 | `repo sync` gagal berulang di satu project | `repo sync --force-sync -j1 <path/project>` |
 | Kamu terlanjur mencari patch seperti di tutorial 18.1 | Memang tidak ada. `local_manifests/lineage-20.0/` tidak eksis — itu normal, bukan tanda sync gagal. |
 | `remote mi-thorium already exists with different attributes` | Kamu menjalankan `repo init` kernel di dalam tree ROM. Lihat pemulihannya di bawah. |
