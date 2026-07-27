@@ -23,6 +23,11 @@ Semua perintah, nama branch, dan path di panduan ini diverifikasi langsung ke re
 - **Butuh `/data` terenkripsi di Android 13:** wajib [kernel 4.19](./BUILD-LineageOS-20-Redmi5A-kernel4.19.md), karena jalur 4.9 di branch `a13` tidak mengenkripsi `/data` sama sekali.
 - **Kamera prioritas utama:** tetap di kernel 4.9. Kernel 4.19 mematikan Camera HAL1.
 
+### Layanan Google
+
+- **[microG bawaan](./MICROG-BUILT-IN-Redmi5A.md)** — privasi, FOSS, tertanam saat build.
+- **[GApps (BiTGApps CORE)](./BUILD-LineageOS-20-Redmi5A-GApps.md)** — Google Play Services asli, disideload ke ROM vanilla.
+
 ### Panduan tambahan
 
 - **[microG Bawaan (opsional)](./MICROG-BUILT-IN-Redmi5A.md)** — pasang microG langsung ke dalam ROM sebagai pengganti Google Play Services. LineageOS 18.1+ sudah punya *restricted signature spoofing* bawaan, jadi **tidak perlu patch `frameworks/base`** sama sekali.

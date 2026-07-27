@@ -2,6 +2,8 @@
 
 > **Opsional.** Panduan ini menambahkan microG langsung ke dalam ROM saat build, sebagai pengganti Google Play Services. Berlaku untuk LineageOS 18.1 maupun 20.
 >
+> Mau Google Play Services asli, bukan microG? Lihat [`BUILD-LineageOS-20-Redmi5A-GApps.md`](./BUILD-LineageOS-20-Redmi5A-GApps.md).
+>
 > Sumber: [lineageos4microg](https://github.com/lineageos4microg) — proyek "LineageOS for microG".
 
 ---
