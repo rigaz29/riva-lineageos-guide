@@ -315,6 +315,34 @@ Kesembilan fitur aktif: `SUS_PATH`, `SUS_MOUNT`, `SUS_KSTAT`, `SUS_MAP`, `SPOOF_
 
 ---
 
+## 10. Berburu bug kernel
+
+Kernel debug + pstore untuk mengejar bug yang tidak menggagalkan build tapi salah tingkah saat runtime.
+
+- **`kernel-fragments/debug.config`** — opsi debug terverifikasi ada di Kconfig kernel ini
+- **`scripts/build-kernel-zips.sh [release|debug|both]`** — bangun kernel rilis + debug dari tree sama; config debug disisipkan sementara, dipulihkan lewat `trap`
+
+```bash
+./scripts/build-kernel-zips.sh both
+# → rom/KERNEL_resukisu-susfs.zip (harian)
+# → rom/KERNEL_resukisu-susfs-DEBUG.zip (berburu)
+```
+
+Yang paling relevan untuk modifikasi kita: `DEBUG_ATOMIC_SLEEP` (adaptasi `vfs_create_mount()` di jalur mount), `DYNAMIC_DEBUG` (nyalakan log susfs runtime), `PANIC_ON_OOPS` + `DETECT_HUNG_TASK` (crash tercatat pstore).
+
+> `CONFIG_PROVE_LOCKING` (lockdep) sengaja **tidak** dipakai: `kernel/locking/lockdep.c` di tree msm downstream ini sudah membusuk (fungsi mainline hilang, tak pernah dibangun) dan gagal kompilasi. Contoh nyata bug diam-diam yang baru muncul saat fiturnya diaktifkan.
+
+Baca hasil:
+```bash
+su -c 'dmesg' | grep -iE "WARNING|BUG|atomic|hung|susfs|call trace"
+su -c 'cat /sys/fs/pstore/console-ramoops-0'   # panic dari boot sebelumnya
+su -c "echo 'file fs/susfs.c +p' > /sys/kernel/debug/dynamic_debug/control"
+```
+
+⚠️ Kernel debug lebih lambat & `PANIC_ON_OOPS` sengaja reboot saat ada masalah — bukan untuk harian.
+
+---
+
 ## Referensi
 
 - ReSukiSU — https://github.com/ReSukiSU/ReSukiSU · dokumentasi: https://resukisu.github.io

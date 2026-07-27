@@ -4,3 +4,10 @@
 rom/*.zip
 rom/*.img
 rom/*.sha256
+
+# Artefak perangkat / GApps / log — jangan masuk repo
+*.tar.gz
+*_bugreport_*
+*_install_log_*
+wget-log*
+BiTGApps-*.zip
