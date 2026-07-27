@@ -4,7 +4,9 @@
 >
 > ROM-A adalah build ulang (27 Juli 2026) dengan versi ReSukiSU diperbaiki 30701 → **35032**; versi lama ditolak manager. **Manager sudah mengonfirmasi 35032**, jadi root berfungsi. Penyebab versi salah: shallow clone — lihat [`../RESUKISU-Redmi5A.md`](../RESUKISU-Redmi5A.md) Bagian 4e.
 >
-> `KERNEL-ONLY` juga sudah terbukti terpasang — jalur update kernel tanpa wipe data berfungsi.
+> `KERNEL-ONLY` sudah terbukti terpasang, dan **kernel susfs v2.2.0 juga sudah terbukti boot** — manager melaporkan susfs v2.2.0 dengan sembilan fitur aktif.
+>
+> ⚠️ Berkas `boot-*.img` di sini adalah **salinan nyata**, bukan hardlink. `mka bootimage` menulis `out/.../boot.img` di tempat, jadi hardlink ke sana akan ikut berubah tiap build — cadangan yang tidak menyelamatkan.
 >
 > Yang terbukti barulah sistem menyala. Fungsi root, microG, kamera, dan radio belum diverifikasi satu per satu.
 
@@ -18,7 +20,10 @@ Tanggal build: **26 Juli 2026** · Target: `lineage_Mi8937_4_19-userdebug` · Ke
 |---|---|---|
 | `ROM-A_resukisu-root_microg.zip` | 967 MiB | LineageOS 20 + **ReSukiSU (root)** + microG |
 | `ROM-B_tanpa-root_microg.zip` | 967 MiB | LineageOS 20 + microG, **tanpa root** |
-| `KERNEL-ONLY_resukisu_4.19.zip` | 21 MiB | **Kernel saja** (AnyKernel3) — ganti kernel tanpa wipe data · ✅ terbukti |
+| `KERNEL-ONLY_resukisu-susfs_4.19.zip` | 21 MiB | **Kernel + susfs v2.2.0** (AnyKernel3) · ✅ terbukti boot |
+| `boot-resukisu-susfs.img` | 22 MiB | Sama, untuk `fastboot flash boot` · ✅ terbukti boot |
+| `KERNEL-ONLY_resukisu_4.19.zip` | 21 MiB | Kernel tanpa susfs (AnyKernel3) · ✅ terbukti |
+| `boot-ROM-A.img` | 22 MiB | Kernel tanpa susfs, cadangan `fastboot` |
 | `recovery.img` | 30 MiB | Recovery LineageOS untuk Mi8937 |
 | `boot-ROM-A.img` | 22 MiB | boot.img milik ROM-A (cadangan, bukan untuk flash terpisah) |
 | `*.sha256` | — | Checksum tiap berkas |

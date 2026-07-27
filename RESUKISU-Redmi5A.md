@@ -2,7 +2,7 @@
 
 > **Opsional.** Root berbasis kernel, ditanam saat build. Untuk target **kernel 4.19** (`lineage_Mi8937_4_19`).
 >
-> Status: **terverifikasi di perangkat** (27 Juli 2026). ROM boot, dan **manager mengenali kernel di versi 35032** — artinya driver KSU hidup dan merespons. Kernel: `Image.gz-dtb` 19,8 MB, 221 simbol `ksu_*` di `System.map`.
+> Status: **terverifikasi di perangkat** (27 Juli 2026). ROM boot, manager mengenali kernel di versi **35032**, dan **susfs v2.2.0 aktif** dengan seluruh sembilan fiturnya termasuk `SUS_MOUNT`.
 
 ---
 
@@ -243,11 +243,75 @@ Pasang **manager**-nya. ReSukiSU mendukung multi-manager (`CONFIG_KSU_MULTI_MANA
 
 ---
 
-## 9. susfs
+## 9. susfs v2.2.0 — berhasil
 
-Belum diaktifkan di sini. Di ReSukiSU, `CONFIG_KSU_SUSFS` adalah **metode hook tersendiri** ("SuSFS Inline Hook") yang menggantikan Manual Hook, bukan tambahan di atasnya — dan tetap memerlukan patch susfs4ksu di kernel.
+Sempat saya simpulkan mustahil **dua kali**. Keduanya salah, dan penyebabnya sama: menyimpulkan dari nama berkas dan README alih-alih membuka isinya.
 
-Bedanya dengan SukiSU: di sana susfs **mustahil** di 4.19 (butuh API v2.x, sumber non-GKI berhenti di v1.5.5). ReSukiSU mengklaim mendukung backport susfs ke kernel 4.3+, jadi jalurnya terbuka — tapi belum saya buktikan di perangkat ini.
+| Kesimpulan saya | Kenyataan |
+|---|---|
+| *"susfs v2.x untuk 4.19 tidak ada"* | Ada — `Patches/Patch/susfs_patch_to_4.19.patch`, direktori yang saya lihat namanya lalu tidak pernah saya buka |
+| *"backport itu proyek berminggu-minggu"* | 19 dari 20 file apply bersih; hanya 1 hunk perlu adaptasi |
+
+Pemasangan otomatis: [`scripts/setup-resukisu-susfs.sh`](./scripts/setup-resukisu-susfs.sh)
+
+### Urutannya menentukan
+
+Tiap langkah bergantung pada hasil sebelumnya, dan menukarnya menghasilkan **kegagalan senyap** — bukan error yang jelas.
+
+| # | Langkah | Kalau dilewat / salah urutan |
+|---|---|---|
+| 1 | Buang hook KSU Mi-Thorium | `susfs_inline_hook_patches.sh` melewati file ber-`ksu_handle`; sebagian hook tidak terpasang |
+| 2 | Terapkan `susfs_patch_to_4.19.patch` | — |
+| 3 | Adaptasi `fs/namespace.c` | `SUS_MOUNT` tidak bisa aktif |
+| 4 | **Pasang ReSukiSU** | ← harus sebelum langkah 5 |
+| 5 | Terapkan inline hook | Kalau ReSukiSU belum ada: hook `setresuid` dilewati diam-diam → `You lost ksu_handle_setresuid hook` |
+| 6 | Fragment config | — |
+
+Langkah 4 sebelum 5 itu tidak intuitif. Skrip inline memutuskan hook mana yang perlu ditambahkan dengan **memeriksa isi `drivers/kernelsu/`**:
+
+```bash
+if grep -rq "ksu_handle_setresuid" "drivers/kernelsu/"; then ...
+else echo "[-] KernelSU have no ksu_handle_setresuid, Skipped."
+```
+
+Pesan itu terbaca seperti "tidak diperlukan", padahal artinya "tidak bisa memeriksa".
+
+### `CONFIG_KSU_SUSFS` adalah metode hook, bukan fitur
+
+Ini yang paling mudah salah paham. Di `kernel/Kconfig` ReSukiSU:
+
+```
+choice
+    prompt "KernelSU Hooking Method"
+    config KSU_TRACEPOINT_HOOK   (GKI2 5.10+)
+    config KSU_MANUAL_HOOK       (3.4+)
+    config KSU_SUSFS             "SUSFS Inline Hook"
+endchoice
+
+menu "KernelSU - SUSFS"
+    depends on KSU_SUSFS
+```
+
+Ketiganya **saling eksklusif**. Menyalakan susfs otomatis mengganti metode hook — itulah kenapa hook Mi-Thorium harus dibuang, bukan diadaptasi seperti pada jalur Manual Hook di [Bagian 4](#4-empat-penyesuaian-kernel).
+
+Menyetel `KSU_MANUAL_HOOK=y` dan `KSU_SUSFS=y` bersamaan tidak menghasilkan error — yang belakangan diam-diam menang.
+
+### Satu adaptasi yang tidak bisa diotomatiskan
+
+Hunk susfs untuk `vfs_kern_mount()` tidak berlaku: kernel Mi-Thorium memakai API `fs_context` yang di-backport dari 5.x, sehingga `alloc_vfsmnt()` sudah pindah ke `vfs_create_mount()` (`fs/namespace.c:1084`). Logikanya dipindahkan ke sana, memakai helper yang disediakan patch itu sendiri.
+
+> Kesalahan saya sebelumnya: menyimpulkan `vfs_kern_mount()` **tidak ada** di kernel ini. Ada — di baris 1134. Saya mencari string pemanggilan `alloc_vfsmnt(name)` dan menyimpulkan dari ketiadaannya.
+
+### Hasil terverifikasi
+
+```
+-- ReSukiSU version code: 35032
+-- ReSukiSU: using SuSFS Inline hook
+-- SUSFS_VERSION: v2.2.0
+225 simbol ksu_* · 65 simbol susfs_* di System.map
+```
+
+Kesembilan fitur aktif: `SUS_PATH`, `SUS_MOUNT`, `SUS_KSTAT`, `SUS_MAP`, `SPOOF_UNAME`, `SPOOF_CMDLINE_OR_BOOTCONFIG`, `OPEN_REDIRECT`, `HIDE_KSU_SUSFS_SYMBOLS`, `ENABLE_LOG`.
 
 ---
 
