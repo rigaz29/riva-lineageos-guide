@@ -22,9 +22,17 @@ say "1/3  Memasang ReSukiSU (branch $BRANCH)"
 if [ -d "$KERNEL/KernelSU" ]; then
     echo "    KernelSU/ sudah ada — dilewati"
 else
-    git clone -q --depth 1 -b "$BRANCH" https://github.com/ReSukiSU/ReSukiSU.git "$KERNEL/KernelSU"
+    # JANGAN pakai --depth 1. Versi KernelSU dihitung dari jumlah commit:
+    #   KSU_VERSION = 30000 + $(git rev-list --count HEAD) + 700
+    # Shallow clone membuat hitungannya 1 -> versi 30701, dan manager menolak
+    # bekerja ("version too low"). Riwayat git di sini load-bearing.
+    git clone -q -b "$BRANCH" https://github.com/ReSukiSU/ReSukiSU.git "$KERNEL/KernelSU"
 fi
 echo "    $(git -C "$KERNEL/KernelSU" log -1 --format='%h %ad' --date=short)"
+N=$(git -C "$KERNEL/KernelSU" rev-list --count HEAD)
+V=$((30000 + N + 700))
+echo "    $N commit -> KSU_VERSION $V"
+[ "$V" -ge 35032 ] || die "versi $V terlalu rendah; manager butuh >=35032. Clone tidak boleh shallow."
 
 # Symlink dihitung, tidak di-hardcode: ia berada DI DALAM drivers/,
 # jadi satu ".." sudah sampai root kernel.

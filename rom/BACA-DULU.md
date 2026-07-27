@@ -1,6 +1,8 @@
 # ROM Siap Flash — Redmi 5A (`riva`)
 
-> **ROM-A sudah terbukti boot di perangkat** (26 Juli 2026). ROM-B belum diuji.
+> **ROM-A terbukti boot di perangkat.** ROM-B belum diuji.
+>
+> ROM-A di folder ini adalah **build ulang** (27 Juli 2026): identik dengan yang terbukti boot, kecuali versi ReSukiSU diperbaiki dari 30701 → **35032**. Versi lama ditolak manager dengan pesan *"version too low"*. Penyebabnya shallow clone — lihat [`../RESUKISU-Redmi5A.md`](../RESUKISU-Redmi5A.md) Bagian 4e.
 >
 > Yang terbukti barulah sistem menyala. Fungsi root, microG, kamera, dan radio belum diverifikasi satu per satu.
 

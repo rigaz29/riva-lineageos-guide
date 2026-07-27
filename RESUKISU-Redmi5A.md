@@ -13,6 +13,7 @@
 | Yang dipasang | [ReSukiSU](https://github.com/ReSukiSU/ReSukiSU) branch `main` |
 | Metode hook | **Manual Hook** + 3 auto-hook LSM |
 | Penyesuaian kernel | **4 titik** — [Bagian 4](#4-empat-penyesuaian-kernel) |
+| Jebakan versi | **jangan `--depth 1`** — [Bagian 4e](#4e-️-jangan-clone-dengan---depth-1) |
 | susfs | belum diaktifkan — langkah terpisah |
 | Otomatisasi | [`scripts/setup-resukisu.sh`](./scripts/setup-resukisu.sh) |
 
@@ -105,6 +106,31 @@ Dua-duanya bermasalah:
 - `ksu_handle_execveat_sucompat` — ada, tapi digerbangi `#ifdef CONFIG_KSU_SUSFS`; komentar sumbernya menjelaskan itu memang khusus jalur susfs
 
 Keduanya menyebabkan `ld.lld: error: undefined symbol`. Perbaikannya: panggil `ksu_handle_execveat()` tanpa syarat, sesuai panduan ReSukiSU untuk kernel 3.14+.
+
+---
+
+## 4e. ⚠️ Jangan clone dengan `--depth 1`
+
+Bukan penyesuaian kernel, tapi jebakan yang paling mahal — hanya ketahuan setelah ROM di-flash.
+
+Versi KernelSU dihitung dari **jumlah commit** (`kernel/Kbuild`):
+
+```make
+KSU_LOCAL_VERSION := $(shell git rev-list --count HEAD)
+KSU_VERSION := $(shell expr 30000 + $(KSU_LOCAL_VERSION) + 700)
+```
+
+Shallow clone membuat hitungannya `1`, sehingga versi jadi **30701**. Kernel tetap kompilasi bersih, ROM tetap boot — lalu manager menolak bekerja:
+
+> *"the current kernelsu version 30701 is too low for manager to work properly. please upgrade to version 35032 or higher!"*
+
+Dengan clone penuh, 4.332 commit menghasilkan **35032** — tepat memenuhi syarat.
+
+```bash
+git clone -b main https://github.com/ReSukiSU/ReSukiSU.git $K/KernelSU   # TANPA --depth
+```
+
+Riwayat git di sini **load-bearing**, bukan keborosan. Skrip repo ini memverifikasinya dan berhenti kalau versinya di bawah 35032.
 
 ---
 
