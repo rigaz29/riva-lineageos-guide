@@ -16,6 +16,7 @@ Tanggal build: **26 Juli 2026** · Target: `lineage_Mi8937_4_19-userdebug` · Ke
 |---|---|---|
 | `ROM-A_resukisu-root_microg.zip` | 967 MiB | LineageOS 20 + **ReSukiSU (root)** + microG |
 | `ROM-B_tanpa-root_microg.zip` | 967 MiB | LineageOS 20 + microG, **tanpa root** |
+| `KERNEL-ONLY_resukisu_4.19.zip` | 21 MiB | **Kernel saja** (AnyKernel3) — ganti kernel tanpa wipe data |
 | `recovery.img` | 30 MiB | Recovery LineageOS untuk Mi8937 |
 | `boot-ROM-A.img` | 22 MiB | boot.img milik ROM-A (cadangan, bukan untuk flash terpisah) |
 | `*.sha256` | — | Checksum tiap berkas |

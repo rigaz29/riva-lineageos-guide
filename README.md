@@ -28,6 +28,7 @@ Semua perintah, nama branch, dan path di panduan ini diverifikasi langsung ke re
 - **[microG Bawaan (opsional)](./MICROG-BUILT-IN-Redmi5A.md)** — pasang microG langsung ke dalam ROM sebagai pengganti Google Play Services. LineageOS 18.1+ sudah punya *restricted signature spoofing* bawaan, jadi **tidak perlu patch `frameworks/base`** sama sekali.
 - **[ReSukiSU (opsional, direkomendasikan)](./RESUKISU-Redmi5A.md)** — root berbasis kernel. Fork SukiSU dengan validator hook yang memberi pesan jelas dan kode yang sehat di kernel <5.10. Butuh 4 penyesuaian kernel, semuanya terdokumentasi dan otomatis lewat skrip.
 - **[SukiSU-Ultra (opsional)](./SUKISU-ULTRA-Redmi5A.md)** — root berbasis kernel. Titik hook bawaan Mi-Thorium cocok dengan branch `builtin` SukiSU, jadi tidak perlu mengedit source kernel — tapi branch itu butuh 2 tambalan agar kompilasi di kernel <5.10, dan **susfs tidak bisa dipakai** di 4.19.
+- **[Kernel-only ZIP](./scripts/make-anykernel-zip.sh)** — bikin flashable kernel AnyKernel3 (~21 MB) untuk menguji perubahan kernel tanpa build ROM penuh dan tanpa wipe data.
 - **[Tuning RAM & Storage](./TUNING-RAM-Storage-Redmi5A.md)** — apakah perlu konfigurasi Android Go? (jawabannya: tidak), apa yang sudah disetel device tree, tuning selektif yang direkomendasikan, dan cara menyiasati super partition 3,75 GB.
 
 ---

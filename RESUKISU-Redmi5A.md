@@ -164,6 +164,44 @@ CONFIG_KSU_STATIC_HOOKS=y                   # titik hook Mi-Thorium
 
 ---
 
+## 5b. Kernel-only ZIP (AnyKernel3)
+
+Untuk iterasi kernel tanpa membangun ulang ROM 967 MB dan **tanpa wipe data**:
+
+```bash
+./scripts/make-anykernel-zip.sh
+# → rom/KERNEL-ONLY_resukisu_4.19.zip (~21 MB)
+adb sideload KERNEL-ONLY_resukisu_4.19.zip
+```
+
+[AnyKernel3](https://github.com/osm0sis/AnyKernel3) membongkar `boot.img` yang sudah ada di perangkat, menukar kernelnya, lalu mengemas ulang — ramdisk dan konfigurasi lain tetap utuh. Siklus uji kernel turun dari ~1 jam ke beberapa menit.
+
+### Yang perlu disesuaikan untuk msm8937
+
+**Path partisi boot.** `split_boot()` membatalkan instalasi kalau `$BLOCK` tidak ada:
+
+```sh
+if [ ! -e "$BLOCK" ]; then abort "Invalid partition. Aborting..."; fi
+```
+
+Path perangkat kerasnya `/dev/block/platform/soc/7824900.sdhci/by-name/`. Symlink `bootdevice` memang dibuat `init.xiaomi.rc`, tapi **hanya untuk `modemst1`, `modemst2`, `fsc`, `fsg`** — tidak termasuk `boot`. Sementara `/dev/block/by-name/` yang dipakai fstab belum tentu ada di recovery.
+
+Karena itu skrip memprobe berurutan, bukan menebak satu path:
+
+```sh
+for _b in /dev/block/bootdevice/by-name/boot \
+          /dev/block/platform/soc/7824900.sdhci/by-name/boot \
+          /dev/block/by-name/boot; do
+  [ -e "$_b" ] && BLOCK=$_b && break;
+done;
+```
+
+**Device check** menerima kesembilan codename Mi8937 (`riva`, `rolex`, `santoni`, `land`, `prada`, `ugg`, `ugglite`, `Mi8937`, `Mi8937_4_19`), jadi tidak ditolak karena variasi `ro.product.device`.
+
+> 💡 Jebakan skrip: jangan verifikasi isi ZIP dengan `unzip -l "$OUT" | grep -q "$f"` di bawah `set -o pipefail`. `grep -q` keluar di kecocokan pertama, `unzip` kena SIGPIPE, dan pipeline dianggap gagal — sehingga **hanya entri paling awal di listing** yang salah dilaporkan hilang. Ambil listing ke berkas dulu, baru grep.
+
+---
+
 ## 6. Yang Divalidasi ReSukiSU
 
 Berguna diketahui sebelum build, karena `manual_hook_check.mk` menghentikan build lebih awal kalau ada yang kurang:
