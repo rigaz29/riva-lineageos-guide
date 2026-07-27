@@ -1,159 +1,125 @@
-# LineageOS 20 + GApps (BiTGApps CORE) — Redmi 5A (`riva`)
+# LineageOS 20 + GApps **built-in** — Redmi 5A (`riva`)
 
-> Varian **Google Apps asli**, alternatif dari [microG bawaan](./MICROG-BUILT-IN-Redmi5A.md).
-> Pelengkap [`BUILD-LineageOS-20-Redmi5A.md`](./BUILD-LineageOS-20-Redmi5A.md) — build ROM-nya **identik**, yang beda hanya: jangan pakai microG, lalu sideload GApps.
+> Google Play Services asli **tertanam saat build** (bukan disideload), analog dengan [microG bawaan](./MICROG-BUILT-IN-Redmi5A.md).
+> Status: **terbukti build sukses** — GmsCore + Phonesky + GSF + sync adapter masuk ke ROM. Boot & Play Services jalan hanya bisa dibuktikan di perangkat.
+>
+> Otomatis: [`scripts/setup-gapps-core.sh`](./scripts/setup-gapps-core.sh)
 
 ---
 
-## 1. GApps vs microG — perbedaan mendasar
+## 1. Kenapa BiTGApps CORE tidak bisa built-in (dan apa yang dipakai)
 
-Sebelumnya kita membangun LineageOS 20 dengan **microG bawaan** (`WITH_GMS=true`). Sekarang **Google Play Services asli**. Perbedaannya bukan sekadar paket:
+Awalnya sasarannya BiTGApps CORE. Saya bongkar paketnya sampai isinya — **BiTGApps adalah installer, bukan vendor tree**:
 
-| | microG (build sebelumnya) | GApps (halaman ini) |
+```
+installer.sh (30 KB)  ·  META-INF/update-binary  ·  tar/core/*.tar.xz
+NOL Android.mk / Android.bp
+```
+
+Ia bekerja dengan mengekstrak tarball saat flash. Tidak bisa `mka`-include. Hal yang sama berlaku untuk OpenGApps dan repo `vendor_gapps` MindTheGapps (itu pembangun-zip, `make gapps_arm64`).
+
+**Yang bisa built-in** adalah branch **`tau`** MindTheGapps — vendor tree siap-`mka` dengan `Android.bp` (`android_app_import`), makefile, dan `proprietary/` tertata per partisi. Itu jalur built-in GApps standar LineageOS.
+
+Tapi set penuh MindTheGapps ~900 MB (Velvet/Google Search 361 MB saja) — **tidak muat** di super partition 3,75 GB Redmi 5A. Solusinya: **struktur MindTheGapps + subset paket inti saja**.
+
+---
+
+## 2. Kunci arsitektur: Soong hanya pasang yang di `PRODUCT_PACKAGES`
+
+Ini yang membuat trimming bersih dan tanpa risiko.
+
+MindTheGapps mendefinisikan **semua** paket di `Android.bp`. Tapi Soong hanya **memasang** modul yang disebut di `PRODUCT_PACKAGES`. Jadi kita tulis makefile core-only yang menyebut 7 paket — Velvet, SpeechServices, talkback, dll. tetap ada di tree tapi **tidak ikut ke ROM**. **Tidak perlu menyentuh `Android.bp` sama sekali.**
+
+Footprint inti (arm64):
+
+| Paket | Ukuran | Lokasi |
 |---|---|---|
-| Cara masuk | tertanam saat build (`WITH_GMS=true`) | **disideload setelah** build, ke ROM vanilla |
-| Tanda tangan | butuh signature spoofing (sudah bawaan LOS) | tanda tangan Google asli — tidak perlu spoofing |
-| Ukuran | ~108 MB | CORE ~70 MB |
-| Play Integrity | lemah | `basic` lebih mungkin lolos |
-| Privasi | tinggi (FOSS) | rendah (Google penuh) |
-| Update GApps | ikut ROM | mandiri lewat Play Store |
-
-⚠️ **Jangan campur keduanya.** Kalau kamu pernah build `WITH_GMS=true`, microG sudah tertanam di partisi `product` dan akan bentrok dengan Play Services. Untuk GApps, ROM harus **vanilla** (tanpa microG).
+| GmsCore (Play Services) | 111 MB | `product/priv-app` |
+| Phonesky (Play Store) | 60 MB | `product/priv-app` |
+| GoogleServicesFramework | ~7 MB | `system_ext/priv-app` |
+| GoogleCalendar/ContactsSyncAdapter | kecil | `product/app` |
+| **Total** | **~180 MB** | muat di cadangan 800 MB |
 
 ---
 
-## 2. Paket GApps yang dipakai
-
-Diambil dari [BiTGApps](https://github.com/BiTGApps/release/releases) — varian **CORE** (paling ramping, sesuai permintaan) untuk **arm64 Android 13**:
-
-```
-BiTGApps-arm64-13.0.0-20260517-105809-CORE.zip   (70 MB)
-```
-
-Kenapa spesifik ini:
-
-- **`arm64`** — Mi8937 memakai `core_64_bit.mk` (`lineage_Mi8937.mk:8`), jadi 64-bit. Jangan ambil varian `arm`.
-- **`13.0.0`** — LineageOS 20 = Android 13. Cocokkan versi Android, bukan versi LineageOS.
-- **`CORE`** — hanya Play Services + Play Store + kerangka minimal. Untuk super partition 3,75 GB Redmi 5A yang sempit, CORE adalah pilihan paling aman. Varian lebih besar (`MINI` 197 MB, `OMNI` 162 MB, `FULL` 401 MB) berisiko tidak muat.
-
-Unduh:
+## 3. Pemasangan
 
 ```bash
-curl -LO https://github.com/BiTGApps/release/releases/download/20260517-105809-release/BiTGApps-arm64-13.0.0-20260517-105809-CORE.zip
+./scripts/setup-gapps-core.sh ~/android/lineage-20.0
 ```
 
-> Ada juga add-on terpisah (Gmail, Maps, Photos, Dialer, …) di rilis `-addons` kalau nanti mau menambah tanpa mengganti CORE.
+Skrip ini:
+1. Clone MindTheGapps `tau` → `vendor/gapps`, buang arch lain + tooling zip (hemat ~1,3 GB)
+2. Tulis `vendor/gapps/gapps-core.mk` (7 paket inti + XML izin/sysconfig)
+3. Wire lewat `WITH_GMS` — buang microG (`microg.xml` + `vendor/partner_gms`), ganti `vendor/partner_gms/products/gms.mk` → inherit `gapps-core.mk`
+4. Verifikasi GmsCore `presigned` + `privileged` (kalau tidak → FC saat boot)
+
+### Wiring: sama persis dengan microG
+
+`WITH_GMS=true` memicu `partner_gms.mk` LineageOS meng-inherit `vendor/partner_gms/products/gms.mk`. Bonus: `WITH_GMS=true` juga **menghapus cadangan `product` 800 MB** (`BoardConfig.mk:101`), membebaskan ruang untuk GApps.
+
+Jadi GApps dan microG dipilih dari **saklar yang sama** (`WITH_GMS`), cuma isi `vendor/partner_gms` yang berbeda.
 
 ---
 
-## 3. Kenapa Redmi 5A justru cocok untuk GApps sideload
-
-Ini detail device tree yang membuat alur ini bekerja. `device/xiaomi/Mi8937/BoardConfig.mk:101-103`:
-
-```makefile
-ifneq ($(WITH_GMS),true)
-BOARD_PRODUCTIMAGE_PARTITION_RESERVED_SIZE := 838860800 # 800 MB
-endif
-```
-
-Artinya: kalau kamu build **tanpa** `WITH_GMS` (yaitu ROM vanilla untuk GApps), Mi-Thorium otomatis **menyisakan 800 MB kosong** di partisi `product` — persis supaya GApps bisa disideload belakangan. Ruang itu hilang kalau `WITH_GMS=true`.
-
-Jadi build GApps dan build microG saling eksklusif secara desain: satu memakai 800 MB itu untuk cadangan sideload, satunya mengisinya dengan microG.
-
-CORE 70 MB muat lega di dalam 800 MB itu.
-
----
-
-## 4. Build ROM (vanilla — TANPA microG)
-
-Ikuti [`BUILD-LineageOS-20-Redmi5A.md`](./BUILD-LineageOS-20-Redmi5A.md) langkah 1–7 **persis**, dengan satu perbedaan: **jangan** setel `WITH_GMS`.
+## 4. Build
 
 ```bash
 cd ~/android/lineage-20.0
-# JANGAN: export WITH_GMS=true   ← itu untuk microG
-source build/envsetup.sh
-lunch lineage_Mi8937_4_19-userdebug     # atau lineage_Mi8937 untuk kernel 4.9
+export WITH_GMS=true              # WAJIB — ini yang menarik GApps
+source build/envsetup.sh && set +e
+lunch lineage_Mi8937_4_19-userdebug
 mka bacon -j$(nproc --all)
 ```
 
-> Kalau shell-mu masih punya `WITH_GMS=true` dari sesi microG sebelumnya, **buka terminal baru** atau `unset WITH_GMS`. Kalau tidak, kamu diam-diam membangun microG lagi.
+> **Patch HAL audio.** Kalau source baru di-`repo sync` atau di-revert, terapkan ulang `patches/0001-audio-extn-Name-the-unused-pthread-parameters.patch` di `hardware/mithorium/audio/.../hal` — kalau tidak, build gagal di `libcirrusspkrprot` (bukan soal GApps).
 
-Verifikasi ROM vanilla (tidak ada microG):
-
-```bash
-ls out/target/product/Mi8937_4_19/product/priv-app | grep -i gmscore
-# HARUS kosong. Kalau ada GmsCore, kamu tak sengaja build microG.
-```
-
-Local manifest, kernel, dan patch HAL audio **sama persis** dengan build microG — tidak ada yang berubah di sana.
-
----
-
-## 5. Flashing — GApps di sesi recovery yang sama
-
-**Ini bagian yang kritis.** GApps harus ada **saat boot pertama** supaya Setup Wizard mengenali Google. Sideload GApps **sebelum** reboot pertama, di sesi recovery yang sama dengan ROM.
+Verifikasi GApps masuk ROM:
 
 ```bash
-# 1. bootloader unlocked, backup data. Kernel 4.19 -> Format Data WAJIB (FBE).
-fastboot flash recovery out/target/product/Mi8937_4_19/recovery.img
-fastboot reboot recovery
-
-# 2. di recovery: Format Data (ketik "yes"), lalu Wipe System/Cache/Dalvik
-
-# 3. sideload ROM
-adb sideload lineage-20.0-<tanggal>-UNOFFICIAL-<id>-Mi8937_4_19.zip
-
-# 4. LANGSUNG sideload GApps — JANGAN reboot dulu
-adb sideload BiTGApps-arm64-13.0.0-20260517-105809-CORE.zip
-
-# 5. baru reboot
+ls out/target/product/Mi8937_4_19/product/priv-app | grep -E "GmsCore|Phonesky"
+ls out/target/product/Mi8937_4_19/system_ext/priv-app | grep GoogleServicesFramework
 ```
 
-⚠️ **Kalau kamu terlanjur boot sebelum sideload GApps:** Setup Wizard sudah jalan tanpa Google, dan menambahkan GApps belakangan sering bikin `com.google.process.gapps has stopped` berulang. Solusinya: masuk recovery lagi → **Format Data** → sideload ROM + GApps bersama → boot. Tidak bisa ditambal setengah jalan.
-
-Boot pertama 10–20 menit (enkripsi awal + optimasi GApps).
+Build sukses = **muat** — `mka bacon` gagal kalau partisi kelebihan.
 
 ---
 
-## 6. Setelah Boot
+## 5. GApps vs microG vs sideload
 
-1. Setup Wizard akan menampilkan login Google — masuk seperti perangkat normal.
-2. Play Store update Play Services sendiri; biarkan beberapa menit.
-3. **Sertifikasi Play:** Settings → Apps → Google Play Store → Storage → hapus data, lalu tunggu. Cek status di Play Store → Settings → About → *Play Protect certification*.
+| | microG built-in | **GApps built-in (ini)** | GApps sideload |
+|---|---|---|---|
+| Cara | `WITH_GMS=true` + microG tree | `WITH_GMS=true` + MindTheGapps core | ROM vanilla + flash BiTGApps zip |
+| Tanda tangan | signature spoofing | Google asli | Google asli |
+| Footprint | ~108 MB | ~180 MB | ~70–200 MB |
+| Update | ikut ROM | mandiri via Play Store | mandiri via Play Store |
+| Keandalan | terbukti | terbukti build | paling andal (installer resmi) |
+| Privasi | tinggi (FOSS) | rendah | rendah |
 
-Perlu jujur soal batasnya: bootloader kamu **unlocked**, jadi **Play Integrity `STRONG`/`DEVICE` tetap gagal** — ini bukan soal GApps, tapi soal verified boot. `basic` biasanya lolos, cukup untuk sebagian besar aplikasi. Bank/game yang menuntut integrity kuat butuh langkah lain (di luar cakupan halaman ini).
-
----
-
-## 7. Update ROM tanpa kehilangan GApps
-
-BiTGApps memasang skrip `addon.d` yang **menyelamatkan GApps saat dirty-flash update ROM**. Jadi update LineageOS berikutnya (sideload ZIP ROM baru saja, tanpa Format Data) akan mempertahankan GApps otomatis.
-
-Kalau setelah update GApps hilang, sideload ulang ZIP CORE di sesi recovery yang sama seperti [Bagian 5](#5-flashing--gapps-di-sesi-recovery-yang-sama).
+Sideload tetap opsi paling andal (installer BiTGApps resmi menangani semua kasus). Built-in praktis kalau kamu ingin GApps menyatu dengan ROM dan tidak perlu sideload terpisah tiap flash.
 
 ---
 
-## 8. Kombinasi dengan root
+## 6. Setelah Flashing
 
-GApps + ReSukiSU bisa berdampingan — flash ROM, GApps, lalu kernel root ([`RESUKISU-Redmi5A.md`](./RESUKISU-Redmi5A.md)) di sesi yang sama, atau kernel-only zip belakangan.
+Tidak perlu sideload GApps terpisah — sudah di dalam ROM. Boot, Setup Wizard menampilkan login Google, masuk seperti biasa.
 
-Catatan: Play Services asli **lebih agresif** mendeteksi root daripada microG. Kalau kamu pakai GApps **dan** root **dan** ingin aplikasi sensitif jalan, susfs + Zygisk/Shamiko jadi lebih relevan — lihat [`RESUKISU-Redmi5A.md`](./RESUKISU-Redmi5A.md) Bagian 9.
+⚠️ Bootloader **unlocked** → **Play Integrity `STRONG`/`DEVICE` tetap gagal** (soal verified boot, bukan GApps). `basic` biasanya lolos. Cek: Play Store → Settings → About → *Play Protect certification*.
 
 ---
 
-## 9. Ringkasan pilihan Google-services
+## 7. Batas & kejujuran
 
-| Kebutuhan | Pilih |
-|---|---|
-| Privasi, FOSS, ringan | [microG](./MICROG-BUILT-IN-Redmi5A.md) |
-| Play Store asli, kompatibilitas app maksimal | **BiTGApps CORE** (halaman ini) |
-| Play Store asli + aplikasi & fitur Google lengkap | BiTGApps MINI/OMNI — **cek muat** di super 3,75 GB dulu |
+- **Belum diuji boot.** Verifikasi berhenti di "GApps masuk ROM & kompilasi bersih". Memakai makefile MindTheGapps yang terbukti menurunkan risiko drastis dibanding hand-authoring, tapi tetap bukan jaminan.
+- Kalau GmsCore FC saat boot pertama, tersangka utama: privapp-permissions XML kurang. Skrip sudah menyertakan `privapp-permissions-google-product.xml` + `system-ext`, yang seharusnya cukup untuk set core ini.
+- `vendor/gapps` (~910 MB) **tidak** masuk repo panduan — hanya skrip reproduksinya. APK Google tidak boleh redistribusi.
 
 ---
 
 ## Referensi
 
-- BiTGApps rilis — https://github.com/BiTGApps/release/releases
-- Paket CORE arm64 13 — `BiTGApps-arm64-13.0.0-20260517-105809-CORE.zip`
-- Cadangan partisi GApps — `device/xiaomi/Mi8937/BoardConfig.mk:101-103`
-- Build ROM dasar — [`BUILD-LineageOS-20-Redmi5A.md`](./BUILD-LineageOS-20-Redmi5A.md)
+- MindTheGapps `tau` — https://gitlab.com/MindTheGapps/vendor_gapps (branch `tau` = Android 13)
+- Struktur `android_app_import` — `vendor/gapps/arm64/Android.bp`
+- Wiring `WITH_GMS` — `vendor/lineage/config/partner_gms.mk`
+- Cadangan partisi — `device/xiaomi/Mi8937/BoardConfig.mk:101-103`
+- Referensi belajar — [NikGApps](https://github.com/nikgapps) · [OpenGApps](https://github.com/opengapps) · [MindTheGapps](https://gitlab.com/MindTheGapps)

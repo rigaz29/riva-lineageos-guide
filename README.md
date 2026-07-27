@@ -26,7 +26,7 @@ Semua perintah, nama branch, dan path di panduan ini diverifikasi langsung ke re
 ### Layanan Google
 
 - **[microG bawaan](./MICROG-BUILT-IN-Redmi5A.md)** — privasi, FOSS, tertanam saat build.
-- **[GApps (BiTGApps CORE)](./BUILD-LineageOS-20-Redmi5A-GApps.md)** — Google Play Services asli, disideload ke ROM vanilla.
+- **[GApps built-in (BiTGApps CORE)](./BUILD-LineageOS-20-Redmi5A-GApps.md)** — Google Play Services asli, tertanam saat build (MindTheGapps core, ~180 MB, muat di super partition 3,75 GB).
 
 ### Panduan tambahan
 
