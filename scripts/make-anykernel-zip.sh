@@ -78,7 +78,8 @@ say "4/4  Mengemas"
 mkdir -p "$(dirname "$OUT")"
 rm -f "$OUT"
 ( cd "$WORK/ak3" && zip -q -r9 "$OUT" . )
-sha256sum "$OUT" > "$OUT.sha256"
+# nama berkas relatif, supaya `sha256sum -c` jalan di sisi pengunduh
+( cd "$(dirname "$OUT")" && sha256sum "$(basename "$OUT")" > "$(basename "$OUT").sha256" )
 
 say "Verifikasi"
 sh -n "$WORK/ak3/anykernel.sh" || die "sintaks anykernel.sh rusak"
