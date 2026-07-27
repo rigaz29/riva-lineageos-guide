@@ -2,7 +2,9 @@
 
 > **ROM-A terbukti boot di perangkat.** ROM-B belum diuji.
 >
-> ROM-A di folder ini adalah **build ulang** (27 Juli 2026): identik dengan yang terbukti boot, kecuali versi ReSukiSU diperbaiki dari 30701 → **35032**. Versi lama ditolak manager dengan pesan *"version too low"*. Penyebabnya shallow clone — lihat [`../RESUKISU-Redmi5A.md`](../RESUKISU-Redmi5A.md) Bagian 4e.
+> ROM-A adalah build ulang (27 Juli 2026) dengan versi ReSukiSU diperbaiki 30701 → **35032**; versi lama ditolak manager. **Manager sudah mengonfirmasi 35032**, jadi root berfungsi. Penyebab versi salah: shallow clone — lihat [`../RESUKISU-Redmi5A.md`](../RESUKISU-Redmi5A.md) Bagian 4e.
+>
+> `KERNEL-ONLY` juga sudah terbukti terpasang — jalur update kernel tanpa wipe data berfungsi.
 >
 > Yang terbukti barulah sistem menyala. Fungsi root, microG, kamera, dan radio belum diverifikasi satu per satu.
 
@@ -16,7 +18,7 @@ Tanggal build: **26 Juli 2026** · Target: `lineage_Mi8937_4_19-userdebug` · Ke
 |---|---|---|
 | `ROM-A_resukisu-root_microg.zip` | 967 MiB | LineageOS 20 + **ReSukiSU (root)** + microG |
 | `ROM-B_tanpa-root_microg.zip` | 967 MiB | LineageOS 20 + microG, **tanpa root** |
-| `KERNEL-ONLY_resukisu_4.19.zip` | 21 MiB | **Kernel saja** (AnyKernel3) — ganti kernel tanpa wipe data |
+| `KERNEL-ONLY_resukisu_4.19.zip` | 21 MiB | **Kernel saja** (AnyKernel3) — ganti kernel tanpa wipe data · ✅ terbukti |
 | `recovery.img` | 30 MiB | Recovery LineageOS untuk Mi8937 |
 | `boot-ROM-A.img` | 22 MiB | boot.img milik ROM-A (cadangan, bukan untuk flash terpisah) |
 | `*.sha256` | — | Checksum tiap berkas |

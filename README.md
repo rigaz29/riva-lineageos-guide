@@ -4,7 +4,7 @@ Panduan build LineageOS dari source untuk **Xiaomi Redmi 5A** (codename `riva`, 
 
 Semua perintah, nama branch, dan path di panduan ini diverifikasi langsung ke repo sumber — bukan disalin dari tutorial lama.
 
-> ✅ **Terbukti di perangkat.** ROM hasil panduan ini — LineageOS 20, kernel 4.19, microG bawaan, root ReSukiSU — sudah berhasil boot di Redmi 5A pada 26 Juli 2026.
+> ✅ **Terverifikasi di perangkat.** ROM hasil panduan ini — LineageOS 20, kernel 4.19, microG bawaan, root ReSukiSU — boot di Redmi 5A, dan manager ReSukiSU mengenali kernel di versi 35032. Flashable kernel-only (AnyKernel3) juga sudah terbukti terpasang.
 
 ---
 

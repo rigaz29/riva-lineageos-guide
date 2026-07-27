@@ -2,7 +2,7 @@
 
 > **Opsional.** Root berbasis kernel, ditanam saat build. Untuk target **kernel 4.19** (`lineage_Mi8937_4_19`).
 >
-> Status: **terbukti boot di perangkat** (26 Juli 2026). Kernel: `Image.gz-dtb` 19,8 MB, 225 simbol `ksu_*` di `System.map`, ReSukiSU version code 30701. Fungsi root itu sendiri belum diverifikasi lewat manager.
+> Status: **terverifikasi di perangkat** (27 Juli 2026). ROM boot, dan **manager mengenali kernel di versi 35032** — artinya driver KSU hidup dan merespons. Kernel: `Image.gz-dtb` 19,8 MB, 221 simbol `ksu_*` di `System.map`.
 
 ---
 
@@ -186,7 +186,7 @@ if [ ! -e "$BLOCK" ]; then abort "Invalid partition. Aborting..."; fi
 
 Path perangkat kerasnya `/dev/block/platform/soc/7824900.sdhci/by-name/`. Symlink `bootdevice` memang dibuat `init.xiaomi.rc`, tapi **hanya untuk `modemst1`, `modemst2`, `fsc`, `fsg`** — tidak termasuk `boot`. Sementara `/dev/block/by-name/` yang dipakai fstab belum tentu ada di recovery.
 
-Karena itu skrip memprobe berurutan, bukan menebak satu path:
+Karena itu skrip memprobe berurutan, bukan menebak satu path — **sudah terbukti bekerja di Redmi 5A**:
 
 ```sh
 for _b in /dev/block/bootdevice/by-name/boot \
