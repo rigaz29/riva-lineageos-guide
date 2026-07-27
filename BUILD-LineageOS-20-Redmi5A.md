@@ -362,6 +362,31 @@ mka recoveryimage
 
 ---
 
+## 8b. Menamai ZIP sesuai isinya
+
+Nama ZIP disusun `vendor/lineage/config/version.mk`:
+
+```
+lineage-20.0-20260727-UNOFFICIAL-microG-ReSukiSU-Mi8937_4_19.zip
+        │    │        │          │                 └── LINEAGE_BUILD (device)
+        │    │        │          └──────────────────── TARGET_UNOFFICIAL_BUILD_ID
+        │    │        └─────────────────────────────── LINEAGE_BUILDTYPE
+        │    └──────────────────────────────────────── tanggal build (UTC)
+        └───────────────────────────────────────────── versi LineageOS
+```
+
+Satu-satunya bagian yang bebas diisi adalah **`TARGET_UNOFFICIAL_BUILD_ID`**. `LINEAGE_BUILDTYPE` dipaksa jadi `UNOFFICIAL` kecuali kamu mengisinya dengan `RELEASE`, `NIGHTLY`, `SNAPSHOT`, atau `EXPERIMENTAL` (`version.mk:21-23`).
+
+```bash
+export TARGET_UNOFFICIAL_BUILD_ID=microG-ReSukiSU
+```
+
+Isi nama itu dengan **apa yang ada di dalam ROM**, bukan siapa yang membangunnya — string ini juga masuk `ro.lineage.version` dan tampil di Settings › About phone, jadi lebih berguna kalau bisa dibaca isinya. Contoh: `microG`, `microG-ReSukiSU`, `microG-ReSukiSU-SuSFS`.
+
+> Mengubahnya **butuh rebuild** — string versi tertanam di `build.prop`, bukan sekadar label berkas. Ganti sebelum `mka bacon`, bukan sesudahnya.
+
+---
+
 ## 9. Hasil Build
 
 ```
