@@ -65,22 +65,21 @@ repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 
 ---
 
-## 4. Sync kernel 4.19 — **repo terpisah, jangan bersarang**
+## 4. Kernel — otomatis (atau manual)
 
-`build-all.sh` default memakai kernel **4.19**, disync sebagai `repo` tersendiri. `repo` tidak mendukung nested checkout, jadi init **di luar** tree ROM lalu pindahkan:
+Kernel 4.19 disync sebagai `repo` tersendiri, terpisah dari ROM. **`build-all.sh` menyync-nya otomatis kalau belum ada** — jadi kamu bisa langsung lompat ke [Bagian 5](#5-build--satu-perintah).
+
+Kalau lebih suka manual (atau ingin kernel 4.9), sync sendiri — `repo` tidak mendukung nested checkout, jadi init **di luar** tree ROM lalu pindahkan:
 
 ```bash
-# init + sync DI LUAR tree ROM
 mkdir -p ~/mithorium-4.19 && cd ~/mithorium-4.19
 repo init -u https://github.com/Mi-Thorium/kernel_manifest -b mithorium-4.19 --no-clone-bundle
 repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags
-
-# pindahkan ke dalam tree ROM (mv -T: gagal keras kalau bersarang, bukan diam-diam salah)
 mkdir -p ~/android/lineage-20.0/kernel/xiaomi
 mv -T ~/mithorium-4.19 ~/android/lineage-20.0/kernel/xiaomi/mithorium-4.19
 ```
 
-Kalau langkah ini dilewat, `build-all.sh` berhenti dengan `kernel belum di-sync`. Latar belakangnya: [panduan kernel 4.19](./BUILD-LineageOS-20-Redmi5A-kernel4.19.md).
+Latar belakang nested-repo: [panduan kernel 4.19](./BUILD-LineageOS-20-Redmi5A-kernel4.19.md).
 
 ---
 
@@ -162,7 +161,6 @@ adb sideload ~/riva-guide/rom/KERNEL_resukisu-susfs.zip
 
 | Gejala | Lihat |
 |---|---|
-| `kernel belum di-sync` | [Bagian 4](#4-sync-kernel-419--repo-terpisah-jangan-bersarang) — kernel wajib disync dulu |
 | `libcirrusspkrprot` C23 error | seharusnya ditangani otomatis; kalau muncul, HAL audio tidak bersih |
 | `no space left` di `out/soong.log` | disk penuh — `out/error.log` justru **kosong**, jangan cari di sana |
 | manager "version too low" | kernel di-clone shallow — `build-all.sh` mencegah ini, tapi jangan `--depth 1` manual |
@@ -182,10 +180,5 @@ repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs 
 mkdir -p .repo/local_manifests
 curl -s -o .repo/local_manifests/mithorium.xml https://raw.githubusercontent.com/Mi-Thorium/local_manifests/master/lineage-20.0.xml
 repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
-mkdir -p ~/mithorium-4.19 && cd ~/mithorium-4.19
-repo init -u https://github.com/Mi-Thorium/kernel_manifest -b mithorium-4.19 --no-clone-bundle
-repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags
-mkdir -p ~/android/lineage-20.0/kernel/xiaomi
-mv -T ~/mithorium-4.19 ~/android/lineage-20.0/kernel/xiaomi/mithorium-4.19
-cd ~/riva-guide && ./scripts/build-all.sh          # → ROM + kernel zip
+cd ~/riva-guide && ./scripts/build-all.sh          # auto-sync kernel + ROM + kernel zip
 ```

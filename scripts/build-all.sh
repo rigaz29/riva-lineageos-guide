@@ -8,6 +8,7 @@
 #   - microG / GApps built-in  (lewat WITH_GMS)
 #   - ReSukiSU / ReSukiSU+susfs (lewat setup-*.sh)
 #   - export WITH_GMS + set +euo sebelum source envsetup
+#   - auto-sync kernel 4.19 kalau belum ada (nested-repo gotcha)
 #   - kemas kernel-only AnyKernel3
 #
 # Pakai:
@@ -42,7 +43,25 @@ die()  { printf '\033[31mGAGAL: %s\033[0m\n' "$*" >&2; exit 1; }
 case "$GMS"  in none|microg|gapps) ;; *) die "--gms harus none|microg|gapps";; esac
 case "$ROOT" in none|resukisu|resukisu-susfs) ;; *) die "--root harus none|resukisu|resukisu-susfs";; esac
 [ -d "$ROMROOT/device/xiaomi/Mi8937" ] || die "bukan tree LineageOS: $ROMROOT"
-[ -d "$KDIR" ] || die "kernel belum di-sync: $KDIR (lihat panduan Bagian sync kernel)"
+# Kernel disync sebagai repo terpisah (nested-repo gotcha). Ini langkah
+# paling mudah lupa, jadi build-all menyync-nya OTOMATIS kalau belum ada.
+# ROM sync tetap prasyarat (langkah obvious yang dilakukan sekali).
+if [ ! -d "$KDIR" ]; then
+    command -v repo >/dev/null || die "kernel belum ada dan 'repo' tidak terpasang"
+    say "Kernel belum ada — sync otomatis (mithorium-4.19)"
+    TMP_K="$(mktemp -d)"
+    ( cd "$TMP_K"
+      repo init -u https://github.com/Mi-Thorium/kernel_manifest -b mithorium-4.19 --no-clone-bundle
+      repo sync -c -j"$(nproc --all)" --no-clone-bundle --no-tags )         || die "sync kernel gagal (butuh internet)"
+    # KDIR = .../mithorium-4.19/kernel (SOURCE). Checkout repo berisi
+    # kernel/ + dts/ + module/, jadi ia dipindah ke INDUK KDIR
+    # (.../mithorium-4.19), bukan ke KDIR sendiri.
+    KROOT="$(dirname "$KDIR")"
+    mkdir -p "$(dirname "$KROOT")"
+    mv -T "$TMP_K" "$KROOT" || die "gagal memindah kernel ke $KROOT"
+    [ -f "$KDIR/Makefile" ] || die "kernel source tidak di $KDIR setelah sync (struktur berubah?)"
+    step "kernel tersync: $KDIR"
+fi
 
 # ─────────────────────────────────────────────────────────── rencana
 WITH_GMS_FLAG=0; [ "$GMS" != "none" ] && WITH_GMS_FLAG=1
