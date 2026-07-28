@@ -8,6 +8,25 @@ Semua perintah, nama branch, dan path di panduan ini diverifikasi langsung ke re
 
 ---
 
+## Jalan pintas — satu perintah
+
+```bash
+# rakit + build LineageOS 20 lengkap, pilih Google-services & root:
+./scripts/build-all.sh --gms=gapps --root=resukisu-susfs
+```
+
+[`scripts/build-all.sh`](./scripts/build-all.sh) menyatukan semua langkah & jebakan sesi ini jadi satu perintah: patch HAL audio, microG/GApps built-in, ReSukiSU/susfs, `WITH_GMS`, `set +euo` sebelum envsetup, lalu kemas ROM + kernel-only zip.
+
+| Flag | Pilihan | Default |
+|---|---|---|
+| `--gms=` | `none` · `microg` · `gapps` | `gapps` |
+| `--root=` | `none` · `resukisu` · `resukisu-susfs` | `resukisu-susfs` |
+| `--prepare-only` | rakit tree tanpa build (uji cepat) | — |
+
+Semua kombinasi (default `gapps` + `resukisu-susfs`) sudah terbukti boot di Redmi 5A. Untuk memahami tiap langkah, baca panduan di bawah.
+
+---
+
 ## Pilih panduan
 
 | Panduan | Android | Kernel | Patch manual | Enkripsi `/data` | Camera HAL1 |
