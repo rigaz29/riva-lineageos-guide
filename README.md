@@ -25,6 +25,8 @@ Semua perintah, nama branch, dan path di panduan ini diverifikasi langsung ke re
 
 Semua kombinasi (default `gapps` + `resukisu-susfs`) sudah terbukti boot di Redmi 5A. Untuk memahami tiap langkah, baca panduan di bawah.
 
+**Baru pertama kali?** Ikuti [Quickstart end-to-end](./QUICKSTART-build-all-Redmi5A.md) — dari mesin kosong sampai HP menyala.
+
 ---
 
 ## Pilih panduan
