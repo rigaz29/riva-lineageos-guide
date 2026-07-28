@@ -177,6 +177,7 @@ adb sideload ~/riva-guide/rom/KERNEL_resukisu-susfs.zip
 | `libcirrusspkrprot` C23 error | seharusnya ditangani otomatis; kalau muncul, HAL audio tidak bersih |
 | `no space left` di `out/soong.log` | disk penuh — `out/error.log` justru **kosong**, jangan cari di sana |
 | manager "version too low" | kernel di-clone shallow — `build-all.sh` mencegah ini, tapi jangan `--depth 1` manual |
+| `TP hooks are incompatible with Non-GKI` (di **Recovery Kernel**) | ReSukiSU v4.1.0+ default hook = TRACEPOINT (khusus GKI 2.0). Kernel boot aman (`CONFIG_KSU_SUSFS=y` sudah memilih inline hook), tapi recovery ikut nyalakan KSU (`config KSU` default y) tanpa memilih hook → jatuh ke TRACEPOINT → abort. Solusinya matikan KSU di recovery — sudah ditangani `build-all.sh` + `setup-resukisu*.sh` |
 | bootloop setelah flash | Format Data lagi, install bersih |
 
 Detail tiap kasus ada di [panduan LineageOS 20](./BUILD-LineageOS-20-Redmi5A.md) dan [ReSukiSU](./RESUKISU-Redmi5A.md).

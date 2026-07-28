@@ -132,12 +132,22 @@ esac
 # BoardConfig bergeser.
 if [ "$ROOT" != "none" ]; then
     BC="$ROMROOT/device/xiaomi/Mi8937/BoardConfig.mk"
+    # kernel boot: fragment ReSukiSU (manual hook + susfs)
     if grep -q "vendor/feature/resukisu.config" "$BC"; then
-        step "device tree sudah wired"
+        step "device tree sudah wired (boot)"
     else
         printf '\n# ReSukiSU (build-all.sh)\nTARGET_KERNEL_CONFIG += \\\n    vendor/feature/resukisu.config\n' >> "$BC"
         grep -q "vendor/feature/resukisu.config" "$BC" \
             && step "device tree wired ke resukisu.config" || die "gagal menulis BoardConfig"
+    fi
+    # kernel recovery: matikan KSU (default y). Tanpa ini recovery memakai hook
+    # default TRACEPOINT (GKI 2.0) dan Kbuild abort di Non-GKI 4.19.
+    if grep -q "vendor/feature/norootrecovery.config" "$BC"; then
+        step "device tree sudah wired (recovery)"
+    else
+        printf '\n# recovery tanpa KSU (build-all.sh)\nTARGET_KERNEL_RECOVERY_CONFIG += \\\n    vendor/feature/norootrecovery.config\n' >> "$BC"
+        grep -q "vendor/feature/norootrecovery.config" "$BC" \
+            && step "device tree wired ke norootrecovery.config" || die "gagal menulis BoardConfig recovery"
     fi
 fi
 

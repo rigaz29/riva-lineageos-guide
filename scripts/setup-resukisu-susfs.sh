@@ -36,9 +36,10 @@ fi
 # ─────────────────────────────────────────────────────────── 1
 # Hook KSU bawaan Mi-Thorium HARUS dibuang lebih dulu.
 #
-# CONFIG_KSU_SUSFS di ReSukiSU adalah *metode hook* dalam blok Kconfig
-# `choice` -- saling eksklusif dengan KSU_MANUAL_HOOK. Kalau susfs aktif,
-# susfs yang menyediakan hook, jadi hook Mi-Thorium hanya jadi hook ganda.
+# CONFIG_KSU_SUSFS di ReSukiSU adalah *metode hook* (SUSFS Inline Hook) --
+# satu opsi di blok Kconfig `choice`, saling eksklusif dengan KSU_MANUAL_HOOK
+# dan KSU_TRACEPOINT_HOOK. susfs inline hook itu yang menyediakan hook, jadi
+# hook KSU bawaan Mi-Thorium (CONFIG_KSU_STATIC_HOOKS) hanya jadi hook ganda.
 # Selain itu susfs_inline_hook_patches.sh MELEWATI file yang masih memuat
 # "ksu_handle", jadi tanpa langkah ini sebagian hook tidak akan terpasang.
 #
@@ -171,8 +172,11 @@ grep -q "ksu_handle_setresuid" kernel/sys.c \
 say "6/6  Menulis fragment config"
 cat > "$KERNEL/arch/arm64/configs/vendor/feature/resukisu.config" <<'EOF'
 # ReSukiSU + susfs v2.2.0 — kernel 4.19 non-GKI
-# CONFIG_KSU_SUSFS adalah METODE HOOK (SuSFS Inline Hook), satu blok `choice`
-# dengan KSU_MANUAL_HOOK dan KSU_TRACEPOINT_HOOK. Jangan setel lebih dari satu.
+# CONFIG_KSU_SUSFS = "SUSFS Inline Hook", SALAH SATU dari tiga opsi di blok
+# Kconfig `choice` "KernelSU Hooking Method" (bersama KSU_TRACEPOINT_HOOK &
+# KSU_MANUAL_HOOK). Menyetel KSU_SUSFS=y sudah MEMILIH inline hook itu dan
+# otomatis menonaktifkan default TRACEPOINT (khusus GKI 2.0, abort di Non-GKI).
+# Jangan setel opsi hook lain bersamaan -- itu konflik choice.
 CONFIG_KSU=y
 CONFIG_KSU_SUSFS=y
 
@@ -187,6 +191,17 @@ CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y
 CONFIG_KSU_SUSFS_ENABLE_LOG=y
 EOF
 echo "    $(grep -c '^CONFIG_KSU' "$KERNEL/arch/arm64/configs/vendor/feature/resukisu.config") opsi"
+
+# Recovery kernel tidak butuh root. `config KSU` = default y, jadi begitu
+# source ReSukiSU ada di tree KSU ikut nyala di recovery — dan karena recovery
+# tak memakai fragment di atas, hook-nya jatuh ke default TRACEPOINT (GKI 2.0)
+# lalu Kbuild abort di Non-GKI. Fragment ini mematikannya; build-all.sh yang
+# menyambungkannya ke TARGET_KERNEL_RECOVERY_CONFIG.
+cat > "$KERNEL/arch/arm64/configs/vendor/feature/norootrecovery.config" <<'EOF'
+# Recovery kernel: matikan KernelSU total (recovery tak butuh root).
+# CONFIG_KSU is not set
+EOF
+echo "    norootrecovery.config (KSU off untuk recovery)"
 
 # ───────────────────────────────────────────────────── verifikasi
 say "Verifikasi"

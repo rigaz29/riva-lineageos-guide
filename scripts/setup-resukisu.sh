@@ -84,6 +84,15 @@ CONFIG_KSU_STATIC_HOOKS=y
 EOF
 echo "    arch/arm64/configs/vendor/feature/resukisu.config"
 
+# Recovery kernel tidak butuh root. `config KSU` = default y -> tanpa fragment
+# ini KSU nyala di recovery dengan hook default TRACEPOINT (GKI 2.0) lalu Kbuild
+# abort di Non-GKI. build-all.sh menyambungkannya ke TARGET_KERNEL_RECOVERY_CONFIG.
+cat > "$KERNEL/arch/arm64/configs/vendor/feature/norootrecovery.config" <<'EOF'
+# Recovery kernel: matikan KernelSU total (recovery tak butuh root).
+# CONFIG_KSU is not set
+EOF
+echo "    arch/arm64/configs/vendor/feature/norootrecovery.config (KSU off untuk recovery)"
+
 # ---------------------------------------------------------- verifikasi
 say "Verifikasi hook yang divalidasi ReSukiSU"
 miss=0

@@ -134,6 +134,42 @@ Riwayat git di sini **load-bearing**, bukan keborosan. Skrip repo ini memverifik
 
 ---
 
+## 4f. ⚠️ Default hook kini TRACEPOINT — yang menjebak **recovery kernel**
+
+Jebakan yang muncul pada ReSukiSU **v4.1.0+** (tidak ada di versi lama yang dulu kita pakai). Blok `choice` "KernelSU Hooking Method" sekarang punya **tiga** opsi dengan **default `KSU_TRACEPOINT_HOOK`** — hook syscall lewat tracepoint, **hanya untuk GKI 2.0** (kernel 5.10+):
+
+```
+choice "KernelSU Hooking Method"   (depends on KSU, default KSU_TRACEPOINT_HOOK)
+├── KSU_TRACEPOINT_HOOK   # GKI 2.0 saja
+├── KSU_MANUAL_HOOK       # kernel 3.4+
+└── KSU_SUSFS             # "SUSFS Inline Hook" — kernel 4.3+
+```
+
+**`KSU_SUSFS` adalah salah satu opsi hook di choice ini** (bukan add-on). Jadi menyetel `CONFIG_KSU_SUSFS=y` **sudah memilih** inline-hook itu dan otomatis menonaktifkan default TRACEPOINT. **Kernel boot kita aman** — fragment `resukisu.config` menyetel `CONFIG_KSU_SUSFS=y`, selesai.
+
+Yang menjebak adalah **kernel recovery**. `config KSU` = **`default y`**, jadi begitu source ReSukiSU ada di tree, KSU **ikut menyala di recovery** juga. Recovery memakai `TARGET_KERNEL_RECOVERY_CONFIG` yang **tidak** memuat fragment boot kita — tidak ada opsi hook yang dipilih — sehingga choice jatuh ke **default TRACEPOINT**, lalu Kbuild abort di Non-GKI:
+
+```
+-- ReSukiSU TP Hooks are only supported on GKI 2.0 kernels.
+drivers/kernelsu/Kbuild:170: *** TP hooks are incompatible with Non-GKI/GKI 1.0 kernels.  Stop.
+```
+
+Gejala khasnya: **build lolos jauh, lalu gagal di "Building Recovery Kernel Image"**, bukan di kernel boot. Recovery tak butuh root, jadi solusinya **matikan KSU di recovery** (tanpa KSU, `choice` yang `depends on KSU` ikut mati, tak ada hook yang perlu dipilih):
+
+```make
+# device/xiaomi/Mi8937/BoardConfig.mk
+TARGET_KERNEL_RECOVERY_CONFIG += vendor/feature/norootrecovery.config
+```
+
+```conf
+# arch/arm64/configs/vendor/feature/norootrecovery.config
+# CONFIG_KSU is not set
+```
+
+Sudah otomatis di `setup-resukisu*.sh` (menulis fragment ini) + `build-all.sh` (menyambungkannya ke BoardConfig).
+
+---
+
 ## 5. Pemasangan
 
 ```bash
