@@ -1,7 +1,7 @@
 # LineageOS 20 + GApps **built-in** — Redmi 5A (`riva`)
 
 > Google Play Services asli **tertanam saat build** (bukan disideload), analog dengan [microG bawaan](./MICROG-BUILT-IN-Redmi5A.md).
-> Status: **terbukti build sukses** — GmsCore + Phonesky + GSF + sync adapter masuk ke ROM. Boot & Play Services jalan hanya bisa dibuktikan di perangkat.
+> Status: **terbukti boot di Redmi 5A** (28 Juli 2026) — GmsCore tidak FC, tidak ada masalah. GmsCore + Phonesky + GSF + sync adapter tertanam.
 >
 > Otomatis: [`scripts/setup-gapps-core.sh`](./scripts/setup-gapps-core.sh)
 
@@ -110,7 +110,7 @@ Tidak perlu sideload GApps terpisah — sudah di dalam ROM. Boot, Setup Wizard m
 
 ## 7. Batas & kejujuran
 
-- **Belum diuji boot.** Verifikasi berhenti di "GApps masuk ROM & kompilasi bersih". Memakai makefile MindTheGapps yang terbukti menurunkan risiko drastis dibanding hand-authoring, tapi tetap bukan jaminan.
+- **Terbukti boot** (28 Juli 2026): GmsCore tidak FC — privapp-permissions XML yang disertakan cukup untuk set core ini. Login Google & Play Store berfungsi (sertifikasi Play tetap terbatas oleh bootloader unlocked).
 - Kalau GmsCore FC saat boot pertama, tersangka utama: privapp-permissions XML kurang. Skrip sudah menyertakan `privapp-permissions-google-product.xml` + `system-ext`, yang seharusnya cukup untuk set core ini.
 - `vendor/gapps` (~910 MB) **tidak** masuk repo panduan — hanya skrip reproduksinya. APK Google tidak boleh redistribusi.
 
