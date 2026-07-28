@@ -33,7 +33,20 @@ sudo apt update && sudo apt install -y bc bison build-essential ccache curl \
 mkdir -p ~/bin && curl -s https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
 chmod a+x ~/bin/repo && export PATH=~/bin:$PATH
 git config --global user.name "Nama" && git config --global user.email "email@kamu.com"
+
+# ccache — WAJIB kalau kamu berencana rebuild (ganti --gms/--root, uji kernel).
+# Tanpa ini tiap build dari nol berjam-jam; dengan ccache panas, menit.
+cat >> ~/.bashrc <<'RC'
+export USE_CCACHE=1
+export CCACHE_EXEC=$(which ccache)
+export CCACHE_DIR=~/.ccache
+RC
+source ~/.bashrc
+ccache -M 30G && ccache -o compression=true
 ```
+
+> ccache disimpan di `~/.ccache` (terpisah dari tree), jadi tetap panas
+> meski kamu bersihkan `out/`. Sesudah satu build penuh terisi ~5–6 GB.
 
 ---
 
